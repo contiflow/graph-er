@@ -64,7 +64,7 @@ def get_tags():
   for event, file in [('BIRTH', BIRTH_XML_FILE),
                       ('MARRIAGE', MARRIAGE_XML_FILE),
                       ('DEATH', DEATH_XML_FILE)]:
-    print event
+    print(event)
     tag_set = set()
     context = etree.iterparse(settings.data_set_dir + file,
                               events=('end',))
@@ -73,7 +73,7 @@ def get_tags():
       tag_set.add(element.tag)
 
     for tag in sorted(tag_set):
-      print tag
+      print(tag)
 
 
 def __get_text__(element):
@@ -547,7 +547,7 @@ def data_stats():
                       ('MARRIAGE', settings.marriage_file),
                       ('DEATH', settings.death_file)]:
     df = pd.read_csv(file)
-    print df.info()
+    print(df.info())
 
     for field in df.columns:
       file_name = os.path.join(settings.stats_dir, '%s_%s.csv' % (event, field))
@@ -566,23 +566,23 @@ def analyse_marriages():
   plt.clf()
 
   marriage_w_age_df = marriage_df[marriage_df.bride_age.notnull()]
-  print 'Bride age'
-  print marriage_w_age_df.info()
+  print('Bride age')
+  print(marriage_w_age_df.info())
   marriage_w_age_df.hist(figsize=(20, 15))
   plt.savefig('bride_age.png')
   plt.clf()
 
   marriage_w_age_df = marriage_df[marriage_df.groom_age.notnull()]
-  print 'Groom age'
-  print marriage_w_age_df.info()
+  print('Groom age')
+  print(marriage_w_age_df.info())
   marriage_w_age_df.hist(figsize=(20, 15))
   plt.savefig('groom_age.png')
   plt.clf()
 
   marriage_w_age_df = marriage_df[(marriage_df.groom_age.notnull()) & (
     marriage_df.bride_age.notnull())]
-  print 'Bride and Groom age'
-  print marriage_w_age_df.info()
+  print('Bride and Groom age')
+  print(marriage_w_age_df.info())
   marriage_w_age_df.hist(figsize=(20, 15))
   plt.savefig('bride_groom_age.png')
   plt.clf()
@@ -590,24 +590,22 @@ def analyse_marriages():
 
 def analyse_ids():
   people_list = pickle.load(open(settings.people_file, 'rb'))
-  people_list = people_list.values()
+  people_list = list(people_list.values())
 
-  bb_list = filter(lambda p: p[c.I_ROLE] == 'Bb',
-                   people_list)
-  print(len(bb_list))
-  bm_list = filter(lambda p: p[c.I_ROLE] == 'Bp' and p[c.I_SEX] == 'M',
-                   people_list)
-  bm_id_list = map(lambda p: p[c.I_CERT_ID], bm_list)
+  bb_list = [p for p in people_list if p[c.I_ROLE] == 'Bb']
+  print((len(bb_list)))
+  bm_list = [p for p in people_list if p[c.I_ROLE] == 'Bp' and p[c.I_SEX] == 'M']
+  bm_id_list = [p[c.I_CERT_ID] for p in bm_list]
 
   id_parts_dict = defaultdict(list)
   for id in bm_id_list:
     for i, id_part in enumerate(id.split('-')):
       id_parts_dict[i].append(id_part)
 
-  print 'Total %s' % len(bm_id_list)
-  for i in id_parts_dict.iterkeys():
-    print 'ID part %s : all %s' % (i, len(id_parts_dict[i]))
-    print 'ID part %s : unique %s' % (i, len(set(id_parts_dict[i])))
+  print('Total %s' % len(bm_id_list))
+  for i in id_parts_dict.keys():
+    print('ID part %s : all %s' % (i, len(id_parts_dict[i])))
+    print('ID part %s : unique %s' % (i, len(set(id_parts_dict[i]))))
 
 
 def analyse_min_max_years(filename):
@@ -624,16 +622,16 @@ def analyse_min_max_years(filename):
         min_year = year
       if year > max_year:
         max_year = year
-  print '\tMin year : {}'.format(min_year)
-  print '\tMax year : {}'.format(max_year)
+  print('\tMin year : {}'.format(min_year))
+  print('\tMax year : {}'.format(max_year))
 
 
 def count_records():
   for filename, s, e in [(settings.birth_file, start, b_end),
                          (settings.marriage_file, m_start, end),
                          (settings.death_file, start, end)]:
-    print filename
-    print '\t {} - {}'.format(s, e)
+    print(filename)
+    print('\t {} - {}'.format(s, e))
     with open(filename, 'r') as data:
       reader = csv.DictReader(data)
       count = 0
@@ -644,28 +642,24 @@ def count_records():
         year = int(year)
         if year >= s and year <= e:
           count += 1
-    print '\t Count {}'.format(count)
+    print('\t Count {}'.format(count))
 
 
 def generate_groundtruth_links():
-  print 'started'
+  print('started')
 
   people_list = pickle.load(open(settings.people_file, 'rb'))
 
-  bb_f_list = filter(lambda p: p[c.I_ROLE] == Role.Bb and p[c.I_SEX] == Sex.F,
-                     people_list)
-  bb_m_list = filter(lambda p: p[c.I_ROLE] == Role.Bb and p[c.I_SEX] == Sex.M,
-                     people_list)
-  mm_f_list = filter(lambda p: p[c.I_ROLE] == Role.Mm and p[c.I_SEX] == Sex.F,
-                     people_list)
-  mm_m_list = filter(lambda p: p[c.I_ROLE] == Role.Mm and p[c.I_SEX] == Sex.M,
-                     people_list)
+  bb_f_list = [p for p in people_list if p[c.I_ROLE] == Role.Bb and p[c.I_SEX] == Sex.F]
+  bb_m_list = [p for p in people_list if p[c.I_ROLE] == Role.Bb and p[c.I_SEX] == Sex.M]
+  mm_f_list = [p for p in people_list if p[c.I_ROLE] == Role.Mm and p[c.I_SEX] == Sex.F]
+  mm_m_list = [p for p in people_list if p[c.I_ROLE] == Role.Mm and p[c.I_SEX] == Sex.M]
 
   gt_dict = defaultdict(list)
   for bb_list, mm_list in [(bb_f_list, mm_f_list), (bb_m_list, mm_m_list)]:
 
-    print 'Bb list len %s' % len(bb_list)
-    print 'Mm list len %s' % len(mm_list)
+    print('Bb list len %s' % len(bb_list))
+    print('Mm list len %s' % len(mm_list))
     for bb in bb_list:
       for mm in mm_list:
         if bb[c.I_FNAME] == mm[c.I_FNAME] and bb[c.I_SNAME] == mm[c.I_SNAME] \
@@ -674,7 +668,7 @@ def generate_groundtruth_links():
           gt_dict['Bb-Mm'].append(key)
 
   pickle.dump(gt_dict, open(settings.gt_file, 'wb'))
-  print 'Gt links Bb-Mm %s' % len(gt_dict['Bb-Mm'])
+  print('Gt links Bb-Mm %s' % len(gt_dict['Bb-Mm']))
 
 def aggregate_ground_truth():
   gt_filenames = [
@@ -690,10 +684,10 @@ def aggregate_ground_truth():
   gt_dict = defaultdict(set)
   for filename in gt_filenames:
     tmp_gt_dict = pickle.load(open(filename, 'r'))
-    for link in tmp_gt_dict.iterkeys():
+    for link in tmp_gt_dict.keys():
       gt_dict[link].update(tmp_gt_dict[link])
 
-  for link, pair_list in gt_dict.iteritems():
+  for link, pair_list in gt_dict.items():
     logging.info('{} {}'.format(link, len(pair_list)))
   pickle.dump(gt_dict, open(settings.gt_file, 'wb'))
 

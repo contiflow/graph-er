@@ -1,0 +1,9 @@
+[project]
+name = "relater-course-layout"
+version = "0.1.0"
+description = "Course fork: RELATER ER code with improved paths, CLI launcher, and docs."
+readme = "README.md"
+
+# Upstream RELATER targets Python 2.7. Install dependencies with:
+#   pip install -r requirements.txt
+# (Use a Python 2.7 virtualenv when running the legacy pipeline.)

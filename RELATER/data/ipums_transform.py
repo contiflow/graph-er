@@ -149,7 +149,7 @@ def generate_census_csv(race_dict, bpl_dict, occ_dict, city_dict, state_dict):
 
     for row in linked_file:
 
-      if 'relate_1' not in row.iterkeys():
+      if 'relate_1' not in iter(row.keys()):
         continue
 
       key = row['relate_1'] + '-' + row['relate_2']
@@ -163,7 +163,7 @@ def generate_census_csv(race_dict, bpl_dict, occ_dict, city_dict, state_dict):
         pass
       elif row['relate_1'] in ['1.0', '2.0', '3.0']:
         p_str = '%s-%s-%s' % (row['year_1'], row['serial_1'], row['pernum_1'])
-        if p_str in person_dict.iterkeys():
+        if p_str in iter(person_dict.keys()):
           p1_dict = person_dict[p_str]
           assert p1_dict[c.HH_FNAME] == row['namefrst_1']
           assert p1_dict[c.HH_SNAME] == row['namelast_1']
@@ -196,7 +196,7 @@ def generate_census_csv(race_dict, bpl_dict, occ_dict, city_dict, state_dict):
         pass
       elif row['relate_2'] in ['1.0', '2.0', '3.0']:
         p_str = '%s-%s-%s' % (row['year_2'], row['serial_2'], row['pernum_2'])
-        if p_str in person_dict.iterkeys():
+        if p_str in iter(person_dict.keys()):
           p2_dict = person_dict[p_str]
           assert p2_dict[c.HH_FNAME] == row['namefrst_2']
           assert p2_dict[c.HH_SNAME] == row['namelast_2']
@@ -232,7 +232,7 @@ def generate_census_csv(race_dict, bpl_dict, occ_dict, city_dict, state_dict):
         gt_dict[link].add(key)
 
 
-    for link, link_list in gt_dict.iteritems():
+    for link, link_list in gt_dict.items():
       logging.info('Ground truth %s - %s' % (link, len(link_list)))
     pickle.dump(gt_dict, open(settings.gt_file, 'wb'))
 
@@ -254,7 +254,7 @@ def transform_stata_csv():
     df = pd.read_stata(settings.data_set_dir + filename,
                        convert_categoricals=False, preserve_dtypes=False)
     csv_filename = filename.split('.')[0] + '.csv'
-    print '%s %s' % (csv_filename, df.shape[0])
+    print('%s %s' % (csv_filename, df.shape[0]))
     df.to_csv(settings.data_set_dir + csv_filename, encoding='utf-8')
 
 
@@ -279,14 +279,14 @@ def analyse_hh():
     couples_hh_set.add(row['serial_1'])
     couples_hh_set.add(row['serial_2'])
 
-  print 'couples households %s' % len(couples_hh_set)
-  print 'female households %s' % len(females_hh_set)
-  print 'male households %s' % len(males_hh_set)
+  print('couples households %s' % len(couples_hh_set))
+  print('female households %s' % len(females_hh_set))
+  print('male households %s' % len(males_hh_set))
 
-  print 'm-f households %s' % len(males_hh_set & females_hh_set)
-  print 'c-m households %s' % len(males_hh_set & couples_hh_set)
-  print 'c-f households %s' % len(couples_hh_set & females_hh_set)
-  print 'c-f-m households %s' % len(couples_hh_set & females_hh_set & males_hh_set)
+  print('m-f households %s' % len(males_hh_set & females_hh_set))
+  print('c-m households %s' % len(males_hh_set & couples_hh_set))
+  print('c-f households %s' % len(couples_hh_set & females_hh_set))
+  print('c-f-m households %s' % len(couples_hh_set & females_hh_set & males_hh_set))
 
 
 

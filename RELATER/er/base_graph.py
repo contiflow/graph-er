@@ -180,7 +180,7 @@ class BASE_GRAPH():
 
         self.atomic_nodes[i_attribute] = {}
 
-        for key, atomic_sim in atomic_node_dict[i_attribute].iteritems():
+        for key, atomic_sim in atomic_node_dict[i_attribute].items():
           if atomic_sim >= attributes_cat.min_sim:
             node_id += 1
             self.G.add_node(node_id, r1=key[0], r2=key[1], t1=c.N_ATOMIC,
@@ -286,7 +286,7 @@ class BASE_GRAPH():
       # group_dict[len(cc)].append((cc, cc_avg_sim, cc_avg_freq))
 
     logging.info('Connected components summary')
-    for group_size, cc_list in group_dict.iteritems():
+    for group_size, cc_list in group_dict.items():
       logging.info('\tcc size %s : number of cc\'s %s' % (group_size,
                                                           len(cc_list)))
     self.group_dict = group_dict
@@ -367,7 +367,7 @@ class BASE_GRAPH():
       # corresponding to each attribute value is the optimal combination. If
       # not, remove the existing edge with the atomic node and add a
       # new edge between the highest similar atomic attribute pair.
-      for sim_attr_i, sim_attr_func in attr_sim_func_dict.iteritems():
+      for sim_attr_i, sim_attr_func in attr_sim_func_dict.items():
         highest_sim_pair = ()
         highest_sim = 0
 
@@ -413,7 +413,7 @@ class BASE_GRAPH():
       # corresponding to each attribute value is the optimal combination. If
       # not, remove the existing edge with the atomic node and add a
       # new edge between the highest similar atomic attribute pair.
-      for sim_attr_i, sim_attr_func in attr_sim_func_dict.iteritems():
+      for sim_attr_i, sim_attr_func in attr_sim_func_dict.items():
         if person[sim_attr_i] is None:
           continue
 
@@ -480,7 +480,7 @@ class BASE_GRAPH():
         calculate_sim_atomic(node_id, node)
         node_id_set_queue.append({node_id})
     else:
-      for group_size in sorted(self.group_dict.iterkeys(), reverse=True):
+      for group_size in sorted(iter(self.group_dict.keys()), reverse=True):
 
         # In songs data sets with basic entities, such as 'msd' and 'mb',
         # we only have singletons
@@ -494,8 +494,8 @@ class BASE_GRAPH():
           logging.debug('Merging groups of {}'.format(group_size))
           for node_id_set, sim in sorted(self.group_dict[group_size],
                                          key=lambda a: a[1], reverse=True):
-            unmerged_nodes = list(filter(lambda node_id: nodes[node_id][c.STATE]
-                                                         != 'M', node_id_set))
+            unmerged_nodes = list([node_id for node_id in node_id_set if nodes[node_id][c.STATE]
+                                                         != 'M'])
             if len(unmerged_nodes) == 0:
               continue
             node_id_set_queue.append(node_id_set)
@@ -555,10 +555,10 @@ class BASE_GRAPH():
       # by removing the node with min sim in each iteration.
       last_n = len(sorted_sim_list) - 1 if hyperparams.scenario.startswith(
         'norel') else 1 # Ablation No REL
-      for n in xrange(len(sorted_sim_list), last_n, -1):
+      for n in range(len(sorted_sim_list), last_n, -1):
         sorted_node_id_sim = sorted_sim_list[0:n]
-        node_id_set = map(lambda x: x[0], sorted_node_id_sim)
-        sim_list = map(lambda x: x[1], sorted_node_id_sim)
+        node_id_set = [x[0] for x in sorted_node_id_sim]
+        sim_list = [x[1] for x in sorted_node_id_sim]
         sim = sum(sim_list) * 1.0 / len(sim_list)
 
         if sim >= merge_t:
@@ -580,19 +580,19 @@ class BASE_GRAPH():
     logging.info('Added neighbour count %s' % (stats.added_neighbors_count))
     logging.info('Activated count %s' % (stats.activated_neighbors_count))
 
-    print 'Merge %s added node count %s' % (
-      merge_t, stats.added_neighbors_count)
+    print('Merge %s added node count %s' % (
+      merge_t, stats.added_neighbors_count))
     if len(stats.added_group_size) > 0:
-      print 'Merge %s added node group avg %s' % (merge_t, (
-          sum(stats.added_group_size) * 1.0 / len(stats.added_group_size)))
-      print 'Merge %s added node group max %s' % (
-        merge_t, max(stats.added_group_size))
-      print 'Merge %s added node group merged count %s' % (
-        merge_t, stats.added_merged_node_id_count)
+      print('Merge %s added node group avg %s' % (merge_t, (
+          sum(stats.added_group_size) * 1.0 / len(stats.added_group_size))))
+      print('Merge %s added node group max %s' % (
+        merge_t, max(stats.added_group_size)))
+      print('Merge %s added node group merged count %s' % (
+        merge_t, stats.added_merged_node_id_count))
       p = stats.added_merged_node_id_count * 100.0 / len(
         stats.added_node_id_set)
-      print 'Merge %s added node group merged percentage %s%%' % (
-        merge_t, p)
+      print('Merge %s added node group merged percentage %s%%' % (
+        merge_t, p))
 
   def __is_valid_node_merge__(self, node_id_set):
     pass
@@ -696,7 +696,7 @@ class BASE_GRAPH():
     singletons = defaultdict(set)
     singletons_per_decade = defaultdict(lambda: defaultdict(set))
 
-    for entity in self.entity_dict.itervalues():
+    for entity in self.entity_dict.values():
       for role in role_list:
         # Appending length of each role
         entity_role_count_stats[role].append(len(entity[c.ROLES][role]))
@@ -708,7 +708,7 @@ class BASE_GRAPH():
     summary_dict = defaultdict(dict)
 
     logging.info('ENTITY count summary stats:')
-    for role, count_list in entity_role_count_stats.iteritems():
+    for role, count_list in entity_role_count_stats.items():
       logging.info('\t{} : min {}'.format(role, min(count_list)))
       logging.info('\t{} : max {}'.format(role, max(count_list)))
       avg_count = sum(count_list) * 1.0 / len(count_list)
@@ -722,7 +722,7 @@ class BASE_GRAPH():
       }
 
     # Counting singletons
-    for pid, p in self.record_dict.iteritems():
+    for pid, p in self.record_dict.items():
       role = p[c.I_ROLE]
       if pid in entity_role_pid_set[role]:
         pass
@@ -732,8 +732,7 @@ class BASE_GRAPH():
     # Getting role counts
     role_record_count = defaultdict(int)
     for role in role_list:
-      p_list = filter(lambda p: p[c.I_ROLE] == role,
-                      self.record_dict.itervalues())
+      p_list = [p for p in iter(self.record_dict.values()) if p[c.I_ROLE] == role]
       role_record_count[role] = len(p_list)
 
     logging.info('SINGLETON summary stats:')
@@ -754,7 +753,7 @@ class BASE_GRAPH():
       if not file_exists:
         writer.writeheader()
 
-      for role, role_summary_dict in summary_dict.iteritems():
+      for role, role_summary_dict in summary_dict.items():
         writer.writerow(role_summary_dict)
 
     entity_pkl_file = settings.output_home_directory + 'entities.pickle'
@@ -778,8 +777,7 @@ class BASE_GRAPH():
     is_valid_merge = self.__is_valid_node_merge__
 
     # Queue up the nodes
-    relationship_nodes_list = filter(lambda x: x[1][c.TYPE1] == c.N_RELTV,
-                                     self.G.nodes(data=True))
+    relationship_nodes_list = [x for x in self.G.nodes(data=True) if x[1][c.TYPE1] == c.N_RELTV]
     for node_id, node in relationship_nodes_list:
       calculate_sim_atomic(node_id, node)
 
@@ -794,7 +792,7 @@ class BASE_GRAPH():
 
       if node[c.STATE] == active:
 
-        if c.SIM_ATOMIC not in node.iterkeys():
+        if c.SIM_ATOMIC not in iter(node.keys()):
           calculate_sim_atomic(node_id, node)
 
         enrich_node(node_id, node, attr_sim_func_dict)
@@ -818,7 +816,7 @@ class BASE_GRAPH():
           node[c.STATE] = inactive
           logging.debug('--- is below threshold')
 
-    print merged_node_count
+    print(merged_node_count)
 
   def __activate_neighbors__(self, node_id, nodes_queue):
     """

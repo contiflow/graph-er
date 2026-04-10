@@ -66,7 +66,7 @@ def generate_people_dict():
   people_dict = data_loader.enumerate_records()
   output_filename = '{}people-{}.gpickle'.format(settings.output_home_directory,
                                                  c.data_set)
-  pickle.dump(people_dict.values(), open(output_filename, 'wb'))
+  pickle.dump(list(people_dict.values()), open(output_filename, 'wb'))
 
 
 def append_people_dict_frequencies(role_type):
@@ -110,7 +110,7 @@ def generate_atomic_nodes_small_ds(sim_func_dict):
     settings.output_home_directory, c.data_set), 'rb'))
 
   atomic_node_dict = {}
-  for i_attribute, sim_function in sim_func_dict.iteritems():
+  for i_attribute, sim_function in sim_func_dict.items():
     atomic_node_dict[i_attribute] = {}
 
     value_set = {p[i_attribute] for p in people_list}
@@ -140,7 +140,7 @@ def generate_atomic_nodes_wblocking(sim_func_dict):
 
   atomic_node_dict = defaultdict(dict)
   logging.info('Generating atomic nodes')
-  for i_attribute, sim_function in sim_func_dict.iteritems():
+  for i_attribute, sim_function in sim_func_dict.items():
 
     logging.info('Starting attribute %s' % i_attribute)
 
@@ -158,12 +158,12 @@ def generate_atomic_nodes_wblocking(sim_func_dict):
 
     logging.info('Attribute index %s, number of keys %s' % (i_attribute,
                                                             len(
-                                                              value_blocks.keys())))
+                                                              list(value_blocks.keys()))))
 
     pool = mp.Pool(settings.parallel_process_count)
     result_objects = [pool.apply_async(__get_node_key_sim_dict__,
                                        args=(value_set, sim_function))
-                      for value_set in value_blocks.itervalues()]
+                      for value_set in value_blocks.values()]
     pool.close()
     pool.join()
 
@@ -184,8 +184,8 @@ def __get_node_key_sim_dict__(value_list, sim_function):
   """
   atomic_node_dict = dict()
   value_list = list(value_list)
-  for i in xrange(len(value_list)):
-    for j in xrange(i, len(value_list)):
+  for i in range(len(value_list)):
+    for j in range(i, len(value_list)):
       key = (value_list[i], value_list[j])
 
       # Using cache is useless as the values are unique
@@ -292,7 +292,7 @@ def merge_graphs(atomic_t):
 
 
 def __merge_add_atomic_nodes__(graph, graph2, existing_new_id_dict):
-  attributes_list = attributes_meta.people_sim_func.keys()
+  attributes_list = list(attributes_meta.people_sim_func.keys())
 
   intersecting_node_count = 0
   new_node_count = 0
@@ -300,12 +300,12 @@ def __merge_add_atomic_nodes__(graph, graph2, existing_new_id_dict):
   for attribute in attributes_list:
 
     existing_atomic_nodes_list = {}
-    for key, id in graph.atomic_nodes[attribute].iteritems():
+    for key, id in graph.atomic_nodes[attribute].items():
       s_key = tuple(sorted(key))
       existing_atomic_nodes_list[s_key] = id
 
     # Iterate through the atomic nodes of graph 2
-    for atomic_node_key, id in graph2.atomic_nodes[attribute].iteritems():
+    for atomic_node_key, id in graph2.atomic_nodes[attribute].items():
 
       atomic_node_key = tuple(sorted(atomic_node_key))
 
@@ -342,7 +342,7 @@ def __merge_add_relationship_nodes__(graph, graph2, existing_new_id_dict):
   new_node_count = 0
 
   # Iterate through the atomic nodes of graph 2
-  for node_key, id in graph2.relationship_nodes.iteritems():
+  for node_key, id in graph2.relationship_nodes.items():
 
     # If the nodes are already in graph1
     if node_key in existing_nodes_list:
@@ -484,7 +484,7 @@ def gt_analyse_initial_graph(graph):
   records = graph.record_dict
 
   certid_id_dict = dict()
-  for p in graph.record_dict.itervalues():
+  for p in graph.record_dict.values():
     cert_id = util.append_role(p[c.I_CERT_ID], p[c.I_ROLE],
                                p[c.I_SEX])
     certid_id_dict[cert_id] = p[c.I_ID]

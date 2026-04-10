@@ -35,7 +35,7 @@ def __preprocess_address__(data_set, address_index):
 
 def __preprocess_birth_data_kil__(p_births):
   std = model.get_standard_string
-  for r in p_births.itervalues():
+  for r in p_births.values():
     parent_my = std(r[c.B_PM_Y])
     parent_my = int(parent_my) \
       if std(r[c.B_PM_Y]) is not None and parent_my.isdigit() else None
@@ -78,7 +78,7 @@ def __retrieve_certificate_data__(filename, cert_id):
       record_dict[record[cert_id]] = record
       i += 1
   logging.info(
-    'Retrieved records of {} : {}'.format(cert_id, len(record_dict.keys())))
+    'Retrieved records of {} : {}'.format(cert_id, len(list(record_dict.keys()))))
   return record_dict
 
 
@@ -99,7 +99,7 @@ def enumerate_hh_records():
     hh_role_id_dict[row[c.HH_SERIAL]][row[c.HH_ROLE]].append(p[c.I_ID])
     people_dict[p[c.I_ID]] = p
 
-  for hh in hh_role_id_dict.itervalues():
+  for hh in hh_role_id_dict.values():
 
     # Add mother related relations
     for m_id in hh.get('M', list()):
@@ -158,7 +158,7 @@ def enumerate_records():
   if c.data_set == 'kil':
     __preprocess_birth_data_kil__(p_births)
 
-  for r in p_births.itervalues():
+  for r in p_births.values():
     r = defaultdict(lambda: None, r)
     mother, father, baby = None, None, None
 
@@ -214,7 +214,7 @@ def enumerate_records():
                                               c.M_ID)
   __preprocess_address__(p_marriages, c.M_B_A1)
   __preprocess_address__(p_marriages, c.M_G_A1)
-  for r in p_marriages.itervalues():
+  for r in p_marriages.values():
 
     r = defaultdict(lambda: None, r)
     b_mother, b_father, bride, g_mother, g_father, groom = None, None, None, \
@@ -311,7 +311,7 @@ def enumerate_records():
   # Death records
   p_deaths = __retrieve_certificate_data__(settings.death_file, c.D_ID)
   __preprocess_address__(p_deaths, c.D_A1)
-  for r in p_deaths.itervalues():
+  for r in p_deaths.values():
 
     r = defaultdict(lambda: None, r)
     d_person, d_spouse, d_mother, d_father = None, None, None, None
@@ -372,9 +372,9 @@ def enumerate_records():
 
   d_count = p_id - m_count - b_count
 
-  print 'B Count {}'.format(b_count)
-  print 'M count {}'.format(m_count)
-  print 'D count {}'.format(d_count)
+  print('B Count {}'.format(b_count))
+  print('M count {}'.format(m_count))
+  print('D count {}'.format(d_count))
 
   return people_dict
 
@@ -547,9 +547,9 @@ def retrieve_ground_truth_links_bhic(graph):
       if dm is None and df is None:
         parent_none_counter.update(['Dd'])
 
-  bb_list = filter(lambda p: p[I_ROLE] == 'Bb', graph.record_dict.itervalues())
-  mm_list = filter(lambda p: p[I_ROLE] == 'Mm', graph.record_dict.itervalues())
-  dd_list = filter(lambda p: p[I_ROLE] == 'Dd', graph.record_dict.itervalues())
+  bb_list = [p for p in iter(graph.record_dict.values()) if p[I_ROLE] == 'Bb']
+  mm_list = [p for p in iter(graph.record_dict.values()) if p[I_ROLE] == 'Mm']
+  dd_list = [p for p in iter(graph.record_dict.values()) if p[I_ROLE] == 'Dd']
   logging.info('Bb count {}, unique t count {}'
                .format(len(bb_list), len(role_t_counter['Bb'])))
   logging.info('Mm count {}, unique t count {}'
@@ -566,7 +566,7 @@ def retrieve_ground_truth_links_bhic(graph):
       fieldnames = ['key', 'count']
       writer = csv.writer(f)
       writer.writerow(fieldnames)
-      for key, value in role_t_counter[role].items():
+      for key, value in list(role_t_counter[role].items()):
         writer.writerow([key, value])
 
   # Generating gt links
@@ -684,7 +684,7 @@ def retrieve_ground_truth_links_bhic(graph):
     logging.info(
       '\tunique bday triangle match: {}'
         .format(unique_bday_triangle_match_count[link]))
-    for role, id_set in duplicates[link].iteritems():
+    for role, id_set in duplicates[link].items():
       logging.info(
         '\tduplicates of {} in {} : {}'.format(role, link, len(id_set)))
 
@@ -716,7 +716,7 @@ def retrieve_ground_truth_links_bhic(graph):
           gt_links_dict[link].remove(gt_pair)
 
   logging.info('Ground truth links count')
-  for key, value in gt_links_dict.iteritems():
+  for key, value in gt_links_dict.items():
     logging.info('{} : {}'.format(key, len(value)))
     logging.info('\t byear diff {} : {}'.format(key, byear_diff[key]))
 
@@ -1030,7 +1030,7 @@ def retrieve_ground_truth_links_ios():
   # Iterate through the life segments to identify birth parents, marriage
   # parents, death parents and death spouses.
   #
-  for life_seg_id, life_seg in life_seg_dict.iteritems():
+  for life_seg_id, life_seg in life_seg_dict.items():
 
     # For each life segment, which has a parent marriage associated with,
     # update the parent's life segments with Bp, Mp and Dp roles.
@@ -1050,10 +1050,10 @@ def retrieve_ground_truth_links_ios():
           bb = cert_id_person_dict['Bb'][next(iter(life_seg['Bb']))]
           if parent['S'] == female and bb[c.B_MN] == '' and bb[c.B_MS] \
               == '':
-            print 'skipping, no data'
+            print('skipping, no data')
           elif parent['S'] == male and bb[c.B_FN] == '' and bb[c.B_FS] \
               == '':
-            print 'skipping, no data'
+            print('skipping, no data')
           else:
             baby_birth_id = list(life_seg['Bb'])[0]
             parent['Bp'].add(baby_birth_id)
@@ -1063,10 +1063,10 @@ def retrieve_ground_truth_links_ios():
           dd = cert_id_person_dict['Dd'][next(iter(life_seg['Dd']))]
           if parent['S'] == female and dd[c.D_MN] == '' and dd[c.D_MS] \
               == '':
-            print 'wrong deceased parent link'
+            print('wrong deceased parent link')
           elif parent['S'] == male and dd[c.D_FN] == '' and dd[c.D_FS] \
               == '':
-            print 'wrong deceased parent link'
+            print('wrong deceased parent link')
           else:
             deceased_id = list(life_seg['Dd'])[0]
             parent['Dp'].add(deceased_id)
@@ -1079,20 +1079,20 @@ def retrieve_ground_truth_links_ios():
           if life_seg['S'] == female:
             if parent['S'] == female and mm[c.M_B_MN] == '' and mm[
               c.M_B_MS] == '':
-              print 'wrong mb parent link'
+              print('wrong mb parent link')
             elif parent['S'] == male and mm[c.M_B_FN] == '' and mm[
               c.M_B_FS] == '':
-              print 'wrong deceased parent link'
+              print('wrong deceased parent link')
             else:
               parent['Mbp'].add(marriage_id)
 
           elif life_seg['S'] == male:
             if parent['S'] == female and mm[c.M_G_MN] == '' and mm[
               c.M_G_MS] == '':
-              print 'wrong deceased parent link'
+              print('wrong deceased parent link')
             elif parent['S'] == male and mm[c.M_G_FN] == '' and mm[
               c.M_G_FS] == '':
-              print 'wrong deceased parent link'
+              print('wrong deceased parent link')
             else:
               parent['Mgp'].add(marriage_id)
           else:
@@ -1123,7 +1123,7 @@ def retrieve_ground_truth_links_ios():
   __enumerate_indirect_gt_links__(life_seg_dict, sib_list_dict,
                                   cert_id_person_dict, life_seg_id_index)
 
-  links_dict = util.enumerate_links(life_seg_dict.values())
+  links_dict = util.enumerate_links(list(life_seg_dict.values()))
   # persist_gt_entities(life_seg_dict)
   # for key in sorted(links_dict.iterkeys()):
   #   print key, len(links_dict[key])
@@ -1146,7 +1146,7 @@ def __enumerate_indirect_gt_links__(life_seg_dict, sib_list_dict,
 
   mother_role_certid_lifesegid_dict = defaultdict(dict)
   father_role_certid_lifesegid_dict = defaultdict(dict)
-  for life_seg_id, life_seg in life_seg_dict.iteritems():
+  for life_seg_id, life_seg in life_seg_dict.items():
     for role in ['Bp', 'Mbp', 'Mgp', 'Dp']:
       for certid in life_seg[role]:
         if life_seg['S'] == 'F':
@@ -1165,14 +1165,14 @@ def __enumerate_indirect_gt_links__(life_seg_dict, sib_list_dict,
   # Dp-Dp links considering the parents in births, marriages and deaths of
   # siblings. Additionally, Bp-Dp, Bp-Mp and and Mp-Dp Links can be retrieved.
   #
-  for sib_set in sib_list_dict.itervalues():
+  for sib_set in sib_list_dict.values():
 
-    for i in xrange(0, len(sib_set)):
+    for i in range(0, len(sib_set)):
 
       sib1_life_seg = life_seg_dict[int(sib_set[i])]
       sib1_roles_set = util.retrieve_child_parent_role_set(sib1_life_seg)
 
-      for j in xrange(i + 1, len(sib_set)):
+      for j in range(i + 1, len(sib_set)):
 
         sib2_life_seg = life_seg_dict[int(sib_set[j])]
         sib2_roles_set = util.retrieve_child_parent_role_set(sib2_life_seg)
@@ -1224,7 +1224,7 @@ def __enumerate_indirect_gt_links__(life_seg_dict, sib_list_dict,
 
   # Enrich the ground truth links, if a person to person link is there,
   # the parents also should be the same
-  for life_seg_id, life_seg in life_seg_dict.copy().iteritems():
+  for life_seg_id, life_seg in life_seg_dict.copy().items():
 
     # Enumerate Bp-Dp links from Bb-Dd links
     if len(life_seg['Bb']) > 0 and len(life_seg['Dd']) > 0:
@@ -1357,7 +1357,7 @@ def persist_gt_entities(life_seg_dict):
   m_role_certid_person_dict = defaultdict(dict)
   f_role_certid_person_dict = defaultdict(dict)
   people_dict = util.get_people_dict(settings.people_file)
-  for person in people_dict.itervalues():
+  for person in people_dict.values():
     if person[c.I_SEX] == 'M':
       m_role_certid_person_dict[person[c.I_ROLE]][person[c.I_CERT_ID]] = person
     elif person[c.I_SEX] == 'F':
@@ -1373,7 +1373,7 @@ def persist_gt_entities(life_seg_dict):
                      'occ', 'by', 'my', 'mplace1', 'mlace2', 'certid'])
 
     role_list = Role.list()
-    for id, life_seg in life_seg_dict.iteritems():
+    for id, life_seg in life_seg_dict.items():
 
       fname_list = list()
 
@@ -1478,7 +1478,7 @@ def retrieve_ground_truth_links_kil():
       # Get parent marriage
       entity['P'] = record['parents\' marriage'].strip()
       if entity['P'] != '':
-        assert entity['P'] in cert_id_person_dict['Mm'].iterkeys()
+        assert entity['P'] in iter(cert_id_person_dict['Mm'].keys())
 
       # Get birth ID
       entity['Bb'].add(record['ID'].strip())
@@ -1487,11 +1487,11 @@ def retrieve_ground_truth_links_kil():
       # Get death ID
       death_id = record['death'].strip()
       if death_id != '':
-        if death_id in cert_id_person_dict['Dd'].iterkeys():
+        if death_id in iter(cert_id_person_dict['Dd'].keys()):
           entity['Dd'].add(death_id)
           death_id_lifeseg_id_dict[death_id] = life_seg_id
         else:
-          print 'wrong death id %s' % (death_id)
+          print('wrong death id %s' % (death_id))
 
       life_seg_dict[life_seg_id] = entity
 
@@ -1566,7 +1566,7 @@ def retrieve_ground_truth_links_kil():
   __enumerate_indirect_gt_links__(life_seg_dict, sib_list_dict,
                                   cert_id_person_dict, life_seg_id)
 
-  links_dict = util.enumerate_links(life_seg_dict.values())
+  links_dict = util.enumerate_links(list(life_seg_dict.values()))
   # persist_gt_entities(life_seg_dict)
   # for key in sorted(links_dict.iterkeys()):
   #   print key, len(links_dict[key])
@@ -1614,7 +1614,7 @@ def __retrieve_date__(date_str):
                       '%d/%m/%Y%H:%M:%S']
 
   # Dutch data set specific issue, an invalid date
-  print date_str
+  print(date_str)
   if 'None/' in date_str:
     date_str = date_str.replace('None/', '')
   if date_str == '31/4/1905':

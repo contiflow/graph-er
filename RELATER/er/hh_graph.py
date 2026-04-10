@@ -72,8 +72,7 @@ class HH_GRAPH(BASE_GRAPH):
     self.linked_ids = set()
 
     self.unique_record_count = \
-      len(filter(lambda p: p[c.I_ROLE] == settings.role_type,
-             self.record_dict.itervalues()))
+      len([p for p in iter(self.record_dict.values()) if p[c.I_ROLE] == settings.role_type])
 
     self.gt_links_dict = pickle.load(open(settings.gt_file, 'rb'))
 
@@ -103,28 +102,28 @@ class HH_GRAPH(BASE_GRAPH):
     :return:
     """
     logging.info('Relationship node addition')
-    records = self.record_dict.values()
+    records = list(self.record_dict.values())
 
     # Filter people with different roles
-    mothers_1 = filter(lambda p: p[c.I_ROLE] == 'M' and
-                                 p[c.HH_I_YEAR] == self.census_year1, records)
-    mothers_2 = filter(lambda p: p[c.I_ROLE] == 'M' and
-                                 p[c.HH_I_YEAR] == self.census_year2, records)
+    mothers_1 = [p for p in records if p[c.I_ROLE] == 'M' and
+                                 p[c.HH_I_YEAR] == self.census_year1]
+    mothers_2 = [p for p in records if p[c.I_ROLE] == 'M' and
+                                 p[c.HH_I_YEAR] == self.census_year2]
 
-    fathers_1 = filter(lambda p: p[c.I_ROLE] == 'F' and
-                                 p[c.HH_I_YEAR] == self.census_year1, records)
-    fathers_2 = filter(lambda p: p[c.I_ROLE] == 'F' and
-                                 p[c.HH_I_YEAR] == self.census_year2, records)
+    fathers_1 = [p for p in records if p[c.I_ROLE] == 'F' and
+                                 p[c.HH_I_YEAR] == self.census_year1]
+    fathers_2 = [p for p in records if p[c.I_ROLE] == 'F' and
+                                 p[c.HH_I_YEAR] == self.census_year2]
 
-    girls_1 = filter(lambda p: p[c.I_ROLE] == 'C' and p[c.I_SEX] == 'F' and
-                               p[c.HH_I_YEAR] == self.census_year1, records)
-    girls_2 = filter(lambda p: p[c.I_ROLE] == 'C' and p[c.I_SEX] == 'F' and
-                               p[c.HH_I_YEAR] == self.census_year2, records)
+    girls_1 = [p for p in records if p[c.I_ROLE] == 'C' and p[c.I_SEX] == 'F' and
+                               p[c.HH_I_YEAR] == self.census_year1]
+    girls_2 = [p for p in records if p[c.I_ROLE] == 'C' and p[c.I_SEX] == 'F' and
+                               p[c.HH_I_YEAR] == self.census_year2]
 
-    boys_1 = filter(lambda p: p[c.I_ROLE] == 'C' and p[c.I_SEX] == 'M' and
-                              p[c.HH_I_YEAR] == self.census_year1, records)
-    boys_2 = filter(lambda p: p[c.I_ROLE] == 'C' and p[c.I_SEX] == 'M' and
-                              p[c.HH_I_YEAR] == self.census_year2, records)
+    boys_1 = [p for p in records if p[c.I_ROLE] == 'C' and p[c.I_SEX] == 'M' and
+                              p[c.HH_I_YEAR] == self.census_year1]
+    boys_2 = [p for p in records if p[c.I_ROLE] == 'C' and p[c.I_SEX] == 'M' and
+                              p[c.HH_I_YEAR] == self.census_year2]
 
     is_valid_node = self.__is_valid_node__
     add_single_node = self.__add_single_node__
@@ -143,8 +142,8 @@ class HH_GRAPH(BASE_GRAPH):
       logging.info('Lengths of list 1 and list 2 are %s, %s' % (len(list1),
                                                                 len(list2)))
 
-      for i in xrange(len(list1)):
-        for j in xrange(len(list2)):
+      for i in range(len(list1)):
+        for j in range(len(list2)):
           p1 = list1[i]
           p2 = list2[j]
 
@@ -159,7 +158,7 @@ class HH_GRAPH(BASE_GRAPH):
                                     p2[c.HH_I_SERIAL])].append((node_id, link))
 
     # Add edges
-    for node_id_link_list in hh_pair_node_id_dict.itervalues():
+    for node_id_link_list in hh_pair_node_id_dict.values():
 
       # Identify mother, father, and child nodes
       mother_node_id = None
@@ -203,8 +202,8 @@ class HH_GRAPH(BASE_GRAPH):
                           t2=HH_Edge_Type.MOTHER)
 
       # Sibling edges
-      for i in xrange(len(children_node_ids)):
-        for j in xrange(i + 1, len(children_node_ids)):
+      for i in range(len(children_node_ids)):
+        for j in range(i + 1, len(children_node_ids)):
           c1 = children_node_ids[i]
           c2 = children_node_ids[j]
 
@@ -378,7 +377,7 @@ class HH_GRAPH(BASE_GRAPH):
     for node_id in node_id_set:
 
       node = self.G.nodes[node_id]
-      if c.SIM_REL not in node.iterkeys():
+      if c.SIM_REL not in iter(node.keys()):
         node[c.SIM_REL] = 0.0
       if node[c.STATE] == State.MERGED:
         continue
@@ -549,14 +548,14 @@ class HH_GRAPH(BASE_GRAPH):
     enrich_node = self.__enrich_node__
 
     refined_count = 0
-    for id, entity in self.entity_dict.items():
+    for id, entity in list(self.entity_dict.items()):
 
       # Refining based on mothers and fathers
       for role in [c.MOTHER, c.FATHER]:
 
         person_list = list(entity[role])
-        for i in xrange(len(person_list)):
-          for j in xrange(i + 1, len(person_list)):
+        for i in range(len(person_list)):
+          for j in range(i + 1, len(person_list)):
 
             node_id = self.__get_existing_rel_node_id__(person_list[i],
                                                         person_list[j])
@@ -572,8 +571,8 @@ class HH_GRAPH(BASE_GRAPH):
       for role in [c.SPOUSE, c.CHILDREN]:
 
         person_list = list(entity[role])
-        for i in xrange(len(person_list)):
-          for j in xrange(i + 1, len(person_list)):
+        for i in range(len(person_list)):
+          for j in range(i + 1, len(person_list)):
 
             node_id = self.__get_existing_rel_node_id__(person_list[i],
                                                         person_list[j])
@@ -595,7 +594,7 @@ class HH_GRAPH(BASE_GRAPH):
 
     # Enumerate processed links
     processed_links_dict = defaultdict(set)
-    for e_id, entity in self.entity_dict.iteritems():
+    for e_id, entity in self.entity_dict.items():
       mother_list = list(entity[c.ROLES]['M'])
       father_list = list(entity[c.ROLES]['F'])
       children_list = list(entity[c.ROLES]['C'])
@@ -603,8 +602,8 @@ class HH_GRAPH(BASE_GRAPH):
       # Adding homogeneous links
       for list1, link in [(mother_list, 'M-M'), (father_list, 'F-F'),
                           (children_list, 'C-C')]:
-        for i in xrange(len(list1)):
-          for j in xrange(i + 1, len(list1)):
+        for i in range(len(list1)):
+          for j in range(i + 1, len(list1)):
             id1, yr1 = list1[i]
             id2, yr2 = list1[j]
 
@@ -614,8 +613,8 @@ class HH_GRAPH(BASE_GRAPH):
       # Adding different links
       for list1, list2, link in [(children_list, mother_list, 'C-M'),
                                  (children_list, father_list, 'C-F')]:
-        for i in xrange(len(list1)):
-          for j in xrange(len(list2)):
+        for i in range(len(list1)):
+          for j in range(len(list2)):
 
             id1, yr1 = list1[i]
             id2, yr2 = list2[j]
@@ -693,10 +692,10 @@ class HH_GRAPH(BASE_GRAPH):
       if not file_exists:
         w.writerow(['link', 'scenario', 'total'] + c.LINKAGE_REASONS_LIST)
       scenario = settings.scenario
-      for link, reason_counter in fn_reasons_dict.iteritems():
+      for link, reason_counter in fn_reasons_dict.items():
         row = [link, scenario, len(fn_reasons_dict[link])]
         for reason in c.LINKAGE_REASONS_LIST:
-          if reason in reason_counter.iterkeys():
+          if reason in iter(reason_counter.keys()):
             row.append(reason_counter.get(reason))
           else:
             row.append(0)

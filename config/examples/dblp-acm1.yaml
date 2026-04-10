@@ -1,0 +1,13 @@
+# Example run profile for bibliographic ER (er.bib_er).
+# Usage (from anywhere, Python 2.7):
+#   python RELATER/run_relater.py --config config/examples/dblp-acm1.yaml
+#
+# CLI flags override these values when both are provided.
+
+dataset: dblp-acm1
+atomic_t: 0.9
+bootstrap_t: 0.95
+merge_t: 0.85
+wa: 0.9
+bridges_n: 10
+scenario_prefix: ""

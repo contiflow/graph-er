@@ -1,0 +1,8 @@
+# RELATER upstream targets Python 2.7 + legacy NetworkX/Pandas.
+# Pin versions approximately to what Febrl-era code expects; adjust for your OS.
+networkx>=1.11,<2.0
+pandas>=0.20,<0.25
+matplotlib>=2.0,<3.0
+
+# Optional: YAML profiles for run_relater.py --config
+PyYAML>=3.13,<6.0

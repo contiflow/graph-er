@@ -146,7 +146,50 @@ The `RELATER` package requires the following python packages to be installed:
 - [Networkx](https://networkx.org/)
 - [Pandas](http://www.scipy.org)
 
+Optional: [PyYAML](https://pyyaml.org/) if you use the YAML-based launcher (`run_relater.py`).
 
+---
+
+## Course-oriented layout (this fork)
+
+Structural changes for reproducibility and coursework documentation:
+
+| Addition | Purpose |
+|----------|---------|
+| `RELATER/paths.py` + `common/settings.py` path anchor | Data and outputs resolve from the repository root (`data/`, `out/`) instead of the process **current working directory**. |
+| `RELATER/run_relater.py` | **CLI** (`argparse`) and optional **`--config` YAML**; rebuilds `sys.argv` then runs `er.bib_er` so hyperparameters are self-documenting. |
+| `config/examples/*.yaml` | Version-controllable run profiles (thresholds, dataset name). |
+| `requirements.txt` / `pyproject.toml` | Declared third-party dependencies for the legacy stack. |
+| `scripts/run_dblp_acm_example.sh` | One-command example wrapper (`PYTHON=python2` override supported). |
+| `docs/` | Architecture note, **course report** (Chinese), and **presentation outline**. |
+
+**Run (Python 2.7), from this directory (`…/RELATER/`):**
+
+```bash
+python RELATER/run_relater.py --config config/examples/dblp-acm1.yaml
+# or, same as upstream argv order:
+python RELATER/run_relater.py dblp-acm1 --atomic-t 0.9 --bootstrap-t 0.95 --merge-t 0.85 --wa 0.9 --bridges-n 10
+```
+
+Legacy invocation still works if you `cd RELATER` and use `python -m er.bib_er …` as before.
+
+---
+
+## Python 3 reproduction (course fork)
+
+The original upstream code targets Python 2. This fork includes Python 3
+compatibility updates for the bibliographic flow (`er.bib_er`) and a launcher.
+
+```bash
+conda create -n relater-py3 -y python=3.12
+conda activate relater-py3
+pip install -r requirements-py3.txt
+python RELATER/run_relater.py --config config/examples/dblp-acm1.yaml
+```
+
+Outputs are generated under `out/<dataset>/`.
+
+---
 
 ## Contact
 

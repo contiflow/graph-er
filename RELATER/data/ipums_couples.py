@@ -66,7 +66,7 @@ def summarize_link_types():
   non_linked_people_count = 0
 
   hh_size_dict = Counter()
-  for person, link_list in hhpernum_linktype_dict.iteritems():
+  for person, link_list in hhpernum_linktype_dict.items():
     if '0' in link_list or '1' in link_list or '5' in link_list:
       linked_people_count += 1
       hh = person.split('-')[0]
@@ -76,11 +76,11 @@ def summarize_link_types():
     else:
       raise Exception('Wrong link type')
 
-  print 'Linked %s' % linked_people_count
-  print 'Non linked %s' % non_linked_people_count
+  print('Linked %s' % linked_people_count)
+  print('Non linked %s' % non_linked_people_count)
 
-  print 'Linked hh average size %s' % (sum(hh_size_dict.values()) * 1.0 / len(
-    hh_size_dict.values()))
+  print('Linked hh average size %s' % (sum(hh_size_dict.values()) * 1.0 / len(
+    list(hh_size_dict.values()))))
 
 
 if __name__ == '__main__':

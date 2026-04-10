@@ -63,6 +63,10 @@ class TYPE_META:
 
 class BIB_GRAPH(BASE_GRAPH):
 
+  # Ambiguity-aware threshold adjustment range.
+  # effective_t = base_t + delta * (0.5 - avg_amb)
+  ADAPTIVE_MERGE_DELTA = 0.08
+
   def __init__(self, type_meta_dict, dataset1_abbreviation,
                dataset2_abbreviation):
     BASE_GRAPH.__init__(self)
@@ -97,10 +101,8 @@ class BIB_GRAPH(BASE_GRAPH):
   def __gen_relationship_nodes__(self):
 
     record_dict1 = self.type_meta_dict['P'].record_dict
-    record_list1 = filter(lambda a: a[0].startswith(self.dataset1_abbreviation),
-                          record_dict1.values())
-    record_list2 = filter(lambda a: a[0].startswith(self.dataset2_abbreviation),
-                          record_dict1.values())
+    record_list1 = [a for a in list(record_dict1.values()) if a[0].startswith(self.dataset1_abbreviation)]
+    record_list2 = [a for a in list(record_dict1.values()) if a[0].startswith(self.dataset2_abbreviation)]
 
     p_attributes = self.type_meta_dict['P'].attributes
     a_attributes = self.type_meta_dict['A'].attributes
@@ -131,7 +133,7 @@ class BIB_GRAPH(BASE_GRAPH):
               if ref_node_id is not None:
                 ref_node_id_list.append(ref_node_id)
 
-          for i in xrange(len(ref_node_id_list)):
+          for i in range(len(ref_node_id_list)):
 
             # Add relationships with primary node
             self.G.add_edge(ref_node_id_list[i], primary_node_id, t1=E_BOOL_W,
@@ -140,7 +142,7 @@ class BIB_GRAPH(BASE_GRAPH):
                             t2=Bib_Edge_Type.AUTHOR)
 
             # Add relationships among the secondary nodes
-            for j in xrange(i + 1, len(ref_node_id_list)):
+            for j in range(i + 1, len(ref_node_id_list)):
               self.G.add_edge(ref_node_id_list[i], ref_node_id_list[j],
                               t1=E_BOOL_W, t2=Bib_Edge_Type.COAUTHOR)
               self.G.add_edge(ref_node_id_list[j], ref_node_id_list[i],
@@ -311,7 +313,7 @@ class BIB_GRAPH(BASE_GRAPH):
 
     # Initializing the nodes queue
     node_id_set_queue = deque()
-    for group_size in sorted(self.group_dict.iterkeys(), reverse=True):
+    for group_size in sorted(iter(self.group_dict.keys()), reverse=True):
 
       if group_size == 1:  # todo later : poor fellows
         # for node_id_set, sim, _ in self.group_dict[1]:
@@ -324,8 +326,8 @@ class BIB_GRAPH(BASE_GRAPH):
         logging.debug('Merging groups of {}'.format(group_size))
         for node_id_set, sim in sorted(self.group_dict[group_size],
                                        key=lambda a: a[1], reverse=True):
-          unmerged_nodes = list(filter(lambda node_id: nodes[node_id][c.STATE]
-                                                       != 'M', node_id_set))
+          unmerged_nodes = list([node_id for node_id in node_id_set if nodes[node_id][c.STATE]
+                                                       != 'M'])
           if len(unmerged_nodes) == 0:
             continue
           node_id_set_queue.append(node_id_set)
@@ -376,15 +378,17 @@ class BIB_GRAPH(BASE_GRAPH):
 
       # Try to merge them until the group reduced to a pair,
       # by removing the node with min sim in each iteration.
-      for n in xrange(len(sorted_sim_list), 1, -1):
+      for n in range(len(sorted_sim_list), 1, -1):
         # for n in [len(sorted_sim_list)]:
         sorted_node_id_sim = sorted_sim_list[0:n]
-        node_id_set = map(lambda x: x[0], sorted_node_id_sim)
+        node_id_set = [x[0] for x in sorted_node_id_sim]
 
-        sim_list = map(lambda x: x[1], sorted_node_id_sim)
+        sim_list = [x[1] for x in sorted_node_id_sim]
         sim = sum(sim_list) * 1.0 / len(sim_list)
 
-        if sim >= merge_threshold:
+        adaptive_merge_t = self.__get_adaptive_merge_threshold__(
+          node_id_set, merge_threshold, nodes)
+        if sim >= adaptive_merge_t:
           if is_valid_node_merge(node_id_set):
             merge_nodes(node_id_set)
             if init_node_id_set in stats.added_node_id_set:
@@ -406,19 +410,19 @@ class BIB_GRAPH(BASE_GRAPH):
     logging.info('Added neighbour count %s' % (stats.added_neighbors_count))
     logging.info('Activated count %s' % (stats.activated_neighbors_count))
 
-    print 'Merge %s added node count %s' % (
-      merge_threshold, stats.added_neighbors_count)
+    print('Merge %s added node count %s' % (
+      merge_threshold, stats.added_neighbors_count))
     if len(stats.added_group_size) > 0:
-      print 'Merge %s added node group avg %s' % (merge_threshold, (
-          sum(stats.added_group_size) * 1.0 / len(stats.added_group_size)))
-      print 'Merge %s added node group max %s' % (
-        merge_threshold, max(stats.added_group_size))
-      print 'Merge %s added node group merged count %s' % (
-        merge_threshold, stats.added_merged_node_id_count)
+      print('Merge %s added node group avg %s' % (merge_threshold, (
+          sum(stats.added_group_size) * 1.0 / len(stats.added_group_size))))
+      print('Merge %s added node group max %s' % (
+        merge_threshold, max(stats.added_group_size)))
+      print('Merge %s added node group merged count %s' % (
+        merge_threshold, stats.added_merged_node_id_count))
       p = stats.added_merged_node_id_count * 100.0 / len(
         stats.added_node_id_set)
-      print 'Merge %s added node group merged percentage %s%%' % (
-        merge_threshold, p)
+      print('Merge %s added node group merged percentage %s%%' % (
+        merge_threshold, p))
 
   def merge_singletons(self, merge_threshold):
 
@@ -438,7 +442,9 @@ class BIB_GRAPH(BASE_GRAPH):
     # Initializing the nodes queue
     node_id_set_queue = deque()
     for node_id_set, sim in self.group_dict[1]:
-      if sim >= merge_threshold:
+      # Use a soft pre-filter so ambiguity-adaptive thresholding can still
+      # recover distinctive pairs slightly below the base threshold.
+      if sim >= (merge_threshold - self.ADAPTIVE_MERGE_DELTA):
         node_id_set_queue.append(node_id_set)
 
     # Processing the nodes queue
@@ -458,10 +464,13 @@ class BIB_GRAPH(BASE_GRAPH):
 
       o1, o2 = enrich_node(node_id, node, attr_sim_func_dict)
 
+      singleton_merge_t = self.__get_adaptive_merge_threshold__(
+        init_node_id_set, merge_threshold, nodes)
       if is_valid_entity_role_merge(o1, o2, init_node_id_set, people_dict,
                                     relationship_nodes, nodes,
-                                    merge_threshold, node_id_set_queue):
-        if is_valid_node_merge(init_node_id_set):
+                                    singleton_merge_t, node_id_set_queue):
+        if node[c.SIM_ATOMIC] >= singleton_merge_t and \
+            is_valid_node_merge(init_node_id_set):
           merge_nodes(init_node_id_set)
 
   def link(self, merge_threshold):
@@ -476,6 +485,26 @@ class BIB_GRAPH(BASE_GRAPH):
       tmp_node = nodes[tmp_node_id]
       self.linkage_reason_dict[tmp_node[c.TYPE2]][
         (tmp_node[c.R1], tmp_node[c.R2])] = reason
+
+  def __get_adaptive_merge_threshold__(self, node_id_set, base_merge_t, nodes):
+    """
+    Ambiguity-aware adaptive merge threshold.
+
+    SIM_AMB is in [0, 1], where larger means less ambiguous. We tighten the
+    threshold for ambiguous groups and slightly relax it for distinctive groups.
+    """
+    amb_list = list()
+    for node_id in node_id_set:
+      node = nodes[node_id]
+      amb = node[c.SIM_AMB] if c.SIM_AMB in iter(node.keys()) else 0.5
+      amb_list.append(max(0.0, min(1.0, amb)))
+
+    if len(amb_list) == 0:
+      return base_merge_t
+
+    avg_amb = sum(amb_list) * 1.0 / len(amb_list)
+    effective_t = base_merge_t + self.ADAPTIVE_MERGE_DELTA * (0.5 - avg_amb)
+    return max(0.0, min(1.0, effective_t))
 
   def __is_valid_node_merge__(self, node_id_set):
 
@@ -541,7 +570,7 @@ class BIB_GRAPH(BASE_GRAPH):
     for node_id in node_id_set:
 
       node = self.G.nodes[node_id]
-      if c.SIM_REL not in node.iterkeys():
+      if c.SIM_REL not in iter(node.keys()):
         node[c.SIM_REL] = 0.0
       if node[c.STATE] == State.MERGED:
         continue
@@ -750,7 +779,7 @@ class BIB_GRAPH(BASE_GRAPH):
       # corresponding to each attribute value is the optimal combination. If
       # not, remove the existing edge with the atomic node and add a
       # new edge between the highest similar atomic attribute pair.
-      for sim_attr_i, sim_attr_func in attr_sim_func_dict.iteritems():
+      for sim_attr_i, sim_attr_func in attr_sim_func_dict.items():
         highest_sim_pair = ()
         highest_sim = 0
 
@@ -793,7 +822,7 @@ class BIB_GRAPH(BASE_GRAPH):
       # corresponding to each attribute value is the optimal combination. If
       # not, remove the existing edge with the atomic node and add a
       # new edge between the highest similar atomic attribute pair.
-      for sim_attr_i, sim_attr_func in attr_sim_func_dict.iteritems():
+      for sim_attr_i, sim_attr_func in attr_sim_func_dict.items():
         if person[sim_attr_i] is None:
           continue
 
@@ -840,12 +869,12 @@ class BIB_GRAPH(BASE_GRAPH):
 
     # Enumerate processed links
     processed_links_dict = defaultdict(set)
-    for e_id, entity in self.entity_dict.iteritems():
+    for e_id, entity in self.entity_dict.items():
 
       if entity['type'] == 'P':
         p_list = list(entity[c.ROLES]['P'])
-        for i in xrange(len(p_list)):
-          for j in xrange(i + 1, len(p_list)):
+        for i in range(len(p_list)):
+          for j in range(i + 1, len(p_list)):
             key1, key2 = p_list[i], p_list[j]
 
             # Consider publications from two data sets
@@ -863,7 +892,7 @@ class BIB_GRAPH(BASE_GRAPH):
   def analyse_fp_fn(self, links_list, false_negative_link_dict,
                     false_positive_link_dict, records, authors=None):
     # Analyse false negative reasons
-    print 'FALSE NEGATIVES ----'
+    print('FALSE NEGATIVES ----')
     reason_dict = self.linkage_reason_dict
     fn_reasons_dict = defaultdict(Counter)
     for link in links_list:
@@ -871,23 +900,23 @@ class BIB_GRAPH(BASE_GRAPH):
 
         if (id_1, id_2) in reason_dict[link]:
           if reason_dict[link][(id_1, id_2)] in ['LSIM', 'SIN']:
-            print reason_dict[link][(id_1, id_2)], id_1, id_2
-            print records[id_1]
+            print(reason_dict[link][(id_1, id_2)], id_1, id_2)
+            print(records[id_1])
             for a_id in records[id_1][c.BB_I_AUTHOR_ID_LIST]:
-              print '\t {} - {}'.format(a_id, authors[a_id][c.BB_I_FULLNAME])
-            print records[id_2]
+              print('\t {} - {}'.format(a_id, authors[a_id][c.BB_I_FULLNAME]))
+            print(records[id_2])
             for a_id in records[id_2][c.BB_I_AUTHOR_ID_LIST]:
-              print '\t {} - {}'.format(a_id, authors[a_id][c.BB_I_FULLNAME])
+              print('\t {} - {}'.format(a_id, authors[a_id][c.BB_I_FULLNAME]))
           fn_reasons_dict[link].update([reason_dict[link][(id_1, id_2)]])
         elif (id_2, id_1) in reason_dict[link]:
           if reason_dict[link][(id_2, id_1)] in ['LSIM', 'SIN']:
-            print reason_dict[link][(id_2, id_1)], id_1, id_2
-            print records[id_1]
+            print(reason_dict[link][(id_2, id_1)], id_1, id_2)
+            print(records[id_1])
             for a_id in records[id_1][c.BB_I_AUTHOR_ID_LIST]:
-              print '\t {} - {}'.format(a_id, authors[a_id][c.BB_I_FULLNAME])
-            print records[id_2]
+              print('\t {} - {}'.format(a_id, authors[a_id][c.BB_I_FULLNAME]))
+            print(records[id_2])
             for a_id in records[id_2][c.BB_I_AUTHOR_ID_LIST]:
-              print '\t {} - {}'.format(a_id, authors[a_id][c.BB_I_FULLNAME])
+              print('\t {} - {}'.format(a_id, authors[a_id][c.BB_I_FULLNAME]))
           fn_reasons_dict[link].update([reason_dict[link][(id_2, id_1)]])
         else:
           assert (id_1, id_2) not in self.relationship_nodes and \
@@ -895,18 +924,18 @@ class BIB_GRAPH(BASE_GRAPH):
 
         # Analyse false positive reasons
 
-    print 'FALSE POSITIVES ----'
+    print('FALSE POSITIVES ----')
     for link in links_list:
       for id_1, id_2 in false_positive_link_dict[link]:
-        print id_1, id_2
-        print records[id_1]
+        print(id_1, id_2)
+        print(records[id_1])
         for a_id in records[id_1][c.BB_I_AUTHOR_ID_LIST]:
-          print '\t {} - {}'.format(a_id,
-                                    authors[a_id][c.BB_I_FULLNAME])
-        print records[id_2]
+          print('\t {} - {}'.format(a_id,
+                                    authors[a_id][c.BB_I_FULLNAME]))
+        print(records[id_2])
         for a_id in records[id_2][c.BB_I_AUTHOR_ID_LIST]:
-          print '\t {} - {}'.format(a_id,
-                                    authors[a_id][c.BB_I_FULLNAME])
+          print('\t {} - {}'.format(a_id,
+                                    authors[a_id][c.BB_I_FULLNAME]))
 
     file_name = '{}fn-reasons.csv'.format(settings.results_dir)
     file_exists = os.path.isfile(file_name)
@@ -915,10 +944,10 @@ class BIB_GRAPH(BASE_GRAPH):
       if not file_exists:
         w.writerow(['link', 'scenario', 'total'] + c.LINKAGE_REASONS_LIST)
       scenario = hyperparams.scenario
-      for link, reason_counter in fn_reasons_dict.iteritems():
+      for link, reason_counter in fn_reasons_dict.items():
         row = [link, scenario, len(fn_reasons_dict[link])]
         for reason in c.LINKAGE_REASONS_LIST:
-          if reason in reason_counter.iterkeys():
+          if reason in iter(reason_counter.keys()):
             row.append(reason_counter.get(reason))
           else:
             row.append(0)
@@ -939,8 +968,7 @@ class BIB_GRAPH(BASE_GRAPH):
     is_valid_merge = self.__is_valid_node_merge__
 
     # Queue up the nodes
-    relationship_nodes_list = filter(lambda x: x[1][c.TYPE1] == c.N_RELTV,
-                                     self.G.nodes(data=True))
+    relationship_nodes_list = [x for x in self.G.nodes(data=True) if x[1][c.TYPE1] == c.N_RELTV]
     for node_id, node in relationship_nodes_list:
       calculate_sim_atomic(node_id, node)
 
@@ -955,7 +983,7 @@ class BIB_GRAPH(BASE_GRAPH):
 
       if node[c.STATE] == active:
 
-        if c.SIM_ATTR not in node.iterkeys():
+        if c.SIM_ATTR not in iter(node.keys()):
           calculate_sim_atomic(node_id, node)
 
         attr_sim_func_dict = attributes_meta.authors_sim_func \
@@ -982,7 +1010,7 @@ class BIB_GRAPH(BASE_GRAPH):
           node[c.STATE] = inactive
           logging.debug('--- is below threshold')
 
-    print merged_node_count
+    print(merged_node_count)
 
   def __activate_neighbors__(self, node_id, nodes_queue):
     """

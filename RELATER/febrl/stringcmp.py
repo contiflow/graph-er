@@ -50,9 +50,9 @@ import math
 import time
 import zlib
 
-import encode  # For Phonix transformation routine (used in syllable alignment
+from . import encode  # For Phonix transformation routine (used in syllable alignment
 # distance)
-import mymath  # Contains arithmetic coder
+from . import mymath  # Contains arithmetic coder
 
 # =============================================================================
 # Special character used in the Jaro, Winkler and q-gram comparions functions.
@@ -363,7 +363,7 @@ def jaro(str1, str2, min_threshold=None):
   len1 = len(str1)
   len2 = len(str2)
 
-  halflen = max(len1, len2) / 2 - 1  # Or + 1?? PC 12/03/2009
+  halflen = max(len1, len2) // 2 - 1  # Or + 1?? PC 12/03/2009
 
   ass1 = ''  # Characters assigned in str1
   ass2 = ''  # Characters assigned in str2
@@ -781,7 +781,7 @@ def posqgram(str1, str2, q=2, max_dist=2, common_divisor='average',
   for pos_q_gram in short_qgram_list:
     (q_gram, pos) = pos_q_gram
 
-    pos_range = range(max(pos - max_dist, 0), pos + max_dist + 1)
+    pos_range = list(range(max(pos - max_dist, 0), pos + max_dist + 1))
 
     for test_pos in pos_range:
       test_pos_q_gram = (q_gram, test_pos)
@@ -975,7 +975,7 @@ def editdist(str1, str2, min_threshold=None):
     str1, str2 = str2, str1
     n, m = m, n
 
-  current = range(n + 1)
+  current = list(range(n + 1))
 
   for i in range(1, m + 1):
 
@@ -1068,7 +1068,7 @@ def mod_editdist(str1, str2, min_threshold=None):
 
   d = []  # Table with the full distance matrix
 
-  current = range(n + 1)
+  current = list(range(n + 1))
   d.append(current)
 
   for i in range(1, m + 1):
@@ -1160,7 +1160,7 @@ def editdist_edits(str1, str2):
 
   d = []  # Table with the full distance matrix
 
-  current = range(n + 1)
+  current = list(range(n + 1))
   d.append(current)
 
   for i in range(1, m + 1):
@@ -1708,7 +1708,7 @@ def compression(str1, str2, compressor='zlib', min_threshold=None):
     # print
 
     if (c21 != c12):
-      print str1, str2, c12, c21
+      print(str1, str2, c12, c21)
 
   if (c12 == 0.0):
     return 0.0  # Maximal distance
@@ -1716,8 +1716,8 @@ def compression(str1, str2, compressor='zlib', min_threshold=None):
   w = 1.0 - (c12 - min(c1, c2)) / max(c1, c2)
 
   if (w < 0.0):
-    print 'warning:Compression based comparison smaller than 0.0 with ' + \
-          'strings "%s" and "%s": %.3f (cap to 1.0)' % (str1, str2, w)
+    print('warning:Compression based comparison smaller than 0.0 with ' + \
+          'strings "%s" and "%s": %.3f (cap to 1.0)' % (str1, str2, w))
     w = 0.0
 
   assert (w >= 0.0) and (w <= 1.0), 'Similarity weight outside 0-1: %f' % (w)
@@ -2344,7 +2344,7 @@ def twoleveljaro(str1, str2, comp_funct='equal', min_threshold=None):
   len1 = len(list1)
   len2 = len(list2)
 
-  halflen = max(len1, len2) / 2
+  halflen = max(len1, len2) // 2
 
   ass_list1 = []  # Words assigned in list1
   ass_list2 = []  # Words assigned in list2
@@ -2613,7 +2613,7 @@ if (__name__ == '__main__'):
 
   str1 = 'dryharbour rona'
   str2 = 'dry harbour'
-  print sortwinkler('Klmor', 'Kilmore', min_threshold=None)
+  print(sortwinkler('Klmor', 'Kilmore', min_threshold=None))
   exit(0)
 
 

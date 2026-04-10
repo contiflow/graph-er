@@ -63,7 +63,7 @@ def __get__clusters__(attr_comb_set):
       combined_str2 = '-'.join(val2)
 
       is_candidate_str = True
-      for k in xrange(len(val1)):
+      for k in range(len(val1)):
         if get_pair_sim((val1[k], val2[k]), 'JW') < 0.9:
           is_candidate_str = False
           break
@@ -103,14 +103,14 @@ def cluster_attribute_combinations_wblocking(record_list, role_type,
 
       attr_comb_blocks[blocking_key].add(__get_concat_tuple__(attribute_list))
 
-  for blocking_key, blocked_list in attr_comb_blocks.iteritems():
+  for blocking_key, blocked_list in attr_comb_blocks.items():
     logging.info(
       'Blocking key %s with %s values' % (blocking_key, len(blocked_list)))
 
   # Clustering the attribute combinations parallel
   pool = mp.Pool(settings.parallel_process_count)
   result_objects = [pool.apply_async(__get__clusters__, args=(attr_comb_set,))
-                    for attr_comb_set in attr_comb_blocks.itervalues()]
+                    for attr_comb_set in attr_comb_blocks.values()]
   pool.close()
   pool.join()
 
@@ -223,7 +223,7 @@ def append_clustered_attr_f(record_list, role_type, attribute_index_list,
     # Getting frequency of string variations
     if attr_str in attr_cluster:
       for variation in attr_cluster.get(attr_str):
-        if variation in frequency_counter.iterkeys():
+        if variation in iter(frequency_counter.keys()):
           aggregated_frequency += frequency_counter.get(variation)
 
     assert aggregated_frequency > 0

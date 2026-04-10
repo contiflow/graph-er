@@ -271,8 +271,8 @@ def new_entity(entity_id, sex):
 
 
 if __name__ == '__main__':
-  print get_standard_string('Nishadi')
-  print get_standard_string('Nish\' adi')
-  print get_standard_string('  Ni   s  h adi')
-  print get_standard_string('\'\'')
-  print get_standard_numerical_value('03:09')
+  print(get_standard_string('Nishadi'))
+  print(get_standard_string('Nish\' adi'))
+  print(get_standard_string('  Ni   s  h adi'))
+  print(get_standard_string('\'\''))
+  print(get_standard_numerical_value('03:09'))

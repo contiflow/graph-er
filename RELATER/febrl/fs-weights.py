@@ -15,7 +15,7 @@ def calculate_agree_disagree_weights(enc_data_dict, plain_data_dict,
   plain_rec_id_set = set(plain_data_dict.keys())
 
   if (sample_size != None):
-    random.seed(random.randint(0, sys.maxint))
+    random.seed(random.randint(0, sys.maxsize))
 
     enc_rec_id_sample = set(random.sample(enc_rec_id_set, sample_size))
     plain_rec_id_sample = set(random.sample(plain_rec_id_set, sample_size))
@@ -28,9 +28,9 @@ def calculate_agree_disagree_weights(enc_data_dict, plain_data_dict,
     common_rec_id_set = enc_rec_id_set.intersection(plain_rec_id_set)
     common_rec_perc = 100 * float(len(common_rec_id_set)) / len(enc_rec_id_set)
 
-  print 'Number of records common to both datasets: %d (%.2f%%)' % (
-  len(common_rec_id_set), common_rec_perc)
-  print
+  print('Number of records common to both datasets: %d (%.2f%%)' % (
+  len(common_rec_id_set), common_rec_perc))
+  print()
 
   m_prob_dict = {}
   u_prob_dict = {}
@@ -52,13 +52,13 @@ def calculate_agree_disagree_weights(enc_data_dict, plain_data_dict,
 
   num_common_rec = len(common_rec_id_set)
 
-  for attr_num, attr_count in m_count_dict.iteritems():
+  for attr_num, attr_count in m_count_dict.items():
     m_prob_dict[attr_num] = float(attr_count) / num_common_rec
 
-  print 'm-probability values', m_prob_dict
+  print('m-probability values', m_prob_dict)
 
   time_used = time.time() - start_time
-  print '  Calculated m-probability values in %d sec' % time_used
+  print('  Calculated m-probability values in %d sec' % time_used)
 
   # Calculate u-probabilities
   #
@@ -69,14 +69,14 @@ def calculate_agree_disagree_weights(enc_data_dict, plain_data_dict,
 
     if (u_prob_approx):
 
-      num_unique_val = len(enc_val_dict.keys())
+      num_unique_val = len(list(enc_val_dict.keys()))
       u_porb = float(1) / num_unique_val
 
       u_prob_dict[attr_index] = u_porb
 
     else:
 
-      for attr_val in enc_val_dict.keys():
+      for attr_val in list(enc_val_dict.keys()):
 
         if (attr_val in plain_val_dict):
           enc_id_set = enc_val_dict[attr_val]
@@ -98,7 +98,7 @@ def calculate_agree_disagree_weights(enc_data_dict, plain_data_dict,
   total_pairs = len(enc_rec_id_set) * len(plain_rec_id_set)
 
   if (u_prob_approx == False):
-    for attr_num, attr_count in u_count_dict.iteritems():
+    for attr_num, attr_count in u_count_dict.items():
       joint_prob = float(attr_count) / total_pairs
       marginal_prob = float(total_non_match_pairs) / total_pairs
 
@@ -106,13 +106,13 @@ def calculate_agree_disagree_weights(enc_data_dict, plain_data_dict,
       u_prob_dict[attr_num] = cond_prob
       # u_prob_dict[attr_num] = numpy.mean(attr_prob_list)
 
-  print
-  print 'u-probability values', u_prob_dict
+  print()
+  print('u-probability values', u_prob_dict)
 
   time_used = time.time() - start_time
-  print '  Calculated u-probability values in %d sec' % time_used
+  print('  Calculated u-probability values in %d sec' % time_used)
 
-  print
+  print()
 
   for attr_index in consider_attr_num_list:
 

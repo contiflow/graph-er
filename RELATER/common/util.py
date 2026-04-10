@@ -437,7 +437,7 @@ def print_atomic_nodes_combined(atomic_nodes):
       continue
 
     attr_name = get_attribute_name(i)
-    if i in atomic_nodes_type_node_dict.iterkeys():
+    if i in iter(atomic_nodes_type_node_dict.keys()):
       node = atomic_nodes_type_node_dict[i]
       sim_val = node[c.SIM]
 
@@ -464,7 +464,7 @@ def print_atomic_nodes(atomic_nodes, p1, p2):
       continue
 
     attr_name = get_attribute_name(i)
-    if i in atomic_nodes_type_node_dict.iterkeys():
+    if i in iter(atomic_nodes_type_node_dict.keys()):
       node = atomic_nodes_type_node_dict[i]
       sim_val = node[c.SIM]
     else:
@@ -532,7 +532,7 @@ def get_people_dict(people_file):
 
   if c.data_set != 'IPUMS':
     I_TIMESTAMP = c.I_TIMESTAMP
-    for person in people_dict.itervalues():
+    for person in people_dict.values():
       event_date = date.fromtimestamp(person[I_TIMESTAMP])
       person.append(event_date)
 

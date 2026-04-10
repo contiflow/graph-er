@@ -38,10 +38,18 @@
 #
 # =============================================================================
 
+import os
 import sys
 import time
 
 from common import hyperparams, constants as c, attributes_meta
+
+try:
+  import paths as _paths
+  _REPO_ROOT = _paths.REPO_ROOT
+except ImportError:
+  _REPO_ROOT = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # -----------------------------------------------------------------------------
 # Basic Settings
@@ -72,10 +80,9 @@ eval_end_year = 1890
 attribute_init_function = ''
 
 # -----------------------------------------------------------------------------
-# Set data directories
+# Set data directories (anchored to repo root when paths.py is available)
 # -----------------------------------------------------------------------------
-data_set_dir = '../data/'
-output_home_directory = '../out/{}/'
+_DATA_PREFIX = os.path.join(_REPO_ROOT, 'data') + os.sep
 
 # -----------------------------------------------------------------------------
 # Settings for raw input data sets, input files, output files
@@ -83,7 +90,8 @@ output_home_directory = '../out/{}/'
 
 data_set = sys.argv[1]
 in_atomic_t = float(sys.argv[2])
-output_home_directory = output_home_directory.format(data_set)
+data_set_dir = _DATA_PREFIX
+output_home_directory = os.path.join(_REPO_ROOT, 'out', data_set) + os.sep
 
 
 # -----------------------------------------------------------------------------

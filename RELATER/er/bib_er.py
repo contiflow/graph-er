@@ -56,10 +56,10 @@ from er.bib_graph import TYPE_META, BIB_GRAPH
 def append_frequencies(records_input_file, role_type, attribute_index_list,
                        attribute_name, output_file):
   record_dict = pickle.load(open(records_input_file, 'rb'))
-  ambiguity.cluster_attribute_combinations(record_dict.values(), role_type,
+  ambiguity.cluster_attribute_combinations(list(record_dict.values()), role_type,
                                            attribute_index_list,
                                            attribute_name)
-  record_list_wf = ambiguity.append_clustered_attr_f(record_dict.values(),
+  record_list_wf = ambiguity.append_clustered_attr_f(list(record_dict.values()),
                                                      role_type,
                                                      attribute_index_list,
                                                      attribute_name)
@@ -74,7 +74,7 @@ def generate_atomic_nodes(data_sets, file_name, sim_func_dict):
   record_list_wf1 = pickle.load(open(file_name.format(data_sets[0]), 'rb'))
   record_list_wf2 = pickle.load(open(file_name.format(data_sets[1]), 'rb'))
 
-  for i_attribute, sim_function in sim_func_dict.iteritems():
+  for i_attribute, sim_function in sim_func_dict.items():
     atomic_node_dict[i_attribute] = {}
 
     value_list1 = list({p[i_attribute] for p in record_list_wf1})
@@ -92,8 +92,8 @@ def generate_atomic_nodes(data_sets, file_name, sim_func_dict):
     logging.info('1 ---- {} : {}'.format(i_attribute, len(value_list1)))
     logging.info('2 ---- {} : {}'.format(i_attribute, len(value_list2)))
 
-    for i in xrange(len(value_list1)):
-      for j in xrange(len(value_list2)):
+    for i in range(len(value_list1)):
+      for j in range(len(value_list2)):
         key = (value_list1[i], value_list2[j])
         if key in atomic_node_dict[i_attribute] or \
             (value_list2[j], value_list1[i]) in atomic_node_dict[i_attribute]:
@@ -116,13 +116,11 @@ def merge_datasets(filename1, dataset1_abbreviation, filename2,
   merged_record_dict = dict()
   for record in record_list1_wf:
     record[0] = '%s-%s' % (dataset1_abbreviation, record[0])
-    record[ref_id_index] = map(lambda i: '%s-%s' % (dataset1_abbreviation, i),
-                               record[ref_id_index])
+    record[ref_id_index] = ['%s-%s' % (dataset1_abbreviation, i) for i in record[ref_id_index]]
     merged_record_dict[record[0]] = record
   for record in record_list2_wf:
     record[0] = '%s-%s' % (dataset2_abbreviation, record[0])
-    record[ref_id_index] = map(lambda i: '%s-%s' % (dataset2_abbreviation, i),
-                               record[ref_id_index])
+    record[ref_id_index] = ['%s-%s' % (dataset2_abbreviation, i) for i in record[ref_id_index]]
     merged_record_dict[record[0]] = record
   pickle.dump(merged_record_dict, open(output_filename, 'wb'))
 

@@ -118,7 +118,7 @@ def persist_entities(entity_dict, graph_def, graph_scenario):
   with open(filename, 'w') as outfile2:
     outfile2.write(json.dumps(entity_dict, cls=util.SetEncoder))
 
-  entity_list = entity_dict.values()
+  entity_list = list(entity_dict.values())
   role_count = defaultdict(list)
   person_records_per_entity = list()
   for entity in entity_list:
@@ -259,13 +259,13 @@ def data_set_charateristics():
 
   cert_role_dict = {'B': ['Bb', 'Bp'], 'M': ['Mm', 'Mbp', 'Mgp'],
                     'D': ['Dd', 'Dp', 'Ds']}
-  for ds, role_list in cert_role_dict.iteritems():
+  for ds, role_list in cert_role_dict.items():
     sum = 0
     for role in role_list:
-      l = len(filter(lambda p: p[c.I_ROLE] == role, people_list))
-      print role, l
+      l = len([p for p in people_list if p[c.I_ROLE] == role])
+      print(role, l)
       sum += l
-    print ds, sum
+    print(ds, sum)
 
 
 def plot_bdm_annual_trend():
@@ -289,25 +289,22 @@ def plot_bdm_annual_trend():
     year_list.append(year)
 
     # Births
-    b_count = len(filter(lambda p: p[c.I_ROLE] == 'Bb' and
-                                   p[c.I_EDATE].year == year,
-                         people_dict.itervalues()))
+    b_count = len([p for p in iter(people_dict.values()) if p[c.I_ROLE] == 'Bb' and
+                                   p[c.I_EDATE].year == year])
     b_list.append(b_count)
 
     # Marriages
-    m_count = len(filter(lambda p: p[c.I_ROLE] == 'Mm' and
+    m_count = len([p for p in iter(people_dict.values()) if p[c.I_ROLE] == 'Mm' and
                                    p[c.I_EDATE].year == year and
-                                   p[c.I_SEX] == 'F',
-                         people_dict.itervalues()))
+                                   p[c.I_SEX] == 'F'])
     m_list.append(m_count)
 
     # Deaths
-    d_count = len(filter(lambda p: p[c.I_ROLE] == 'Dd' and
-                                   p[c.I_EDATE].year == year,
-                         people_dict.itervalues()))
+    d_count = len([p for p in iter(people_dict.values()) if p[c.I_ROLE] == 'Dd' and
+                                   p[c.I_EDATE].year == year])
     d_list.append(d_count)
 
-    print year, b_count, m_count, d_count
+    print(year, b_count, m_count, d_count)
 
   plt.plot(year_list, b_list, color='green', label='Birth')
   plt.plot(year_list, m_list, color='blue', label='Marriage')
@@ -374,7 +371,7 @@ def raw_data_set_stats(people_dict):
              'children', 'spouse', 'entity_id']
   # 'children', 'spouse', 'entity_id', 'date']
   # 'children', 'spouse', 'entity_id', 'addr1_f', 'parish_f', 'date']
-  people_df = pd.DataFrame(people_dict.itervalues(), columns=columns)
+  people_df = pd.DataFrame(iter(people_dict.values()), columns=columns)
 
   # Stats of numerical fields
   info_file = os.path.join(settings.stats_dir, 'numerical_fields.csv')
@@ -416,7 +413,7 @@ def plot_gt_time_difference():
                                     person[c.I_SEX])
     cert_id_role_person_id_dict[cert_id_role] = person
 
-  for link, gt_pair_list in gt_links_dict.iteritems():
+  for link, gt_pair_list in gt_links_dict.items():
 
     if len(gt_pair_list) == 0:
       continue
@@ -465,4 +462,4 @@ if __name__ == '__main__':
 
   data_set_charateristics()
 
-  print 'Successfully completed!'
+  print('Successfully completed!')

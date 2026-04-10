@@ -309,10 +309,10 @@ def check_memory_use(max_mbyte):
   """
 
   if (get_memory_usage_val() > max_mbyte):
-    print
-    print '*** Warning: Program uses more than %d MBytes: %d MBytes ***' % \
-          (max_mbyte, get_memory_usage_val())
-    print
+    print()
+    print('*** Warning: Program uses more than %d MBytes: %d MBytes ***' % \
+          (max_mbyte, get_memory_usage_val()))
+    print()
     sys.exit()  # Stop due to memory overuse
 
 # =============================================================================

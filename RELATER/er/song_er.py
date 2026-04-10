@@ -58,15 +58,15 @@ def append_frequencies(records_input_file, role_type, attribute_index_list,
   logging.info('Started appending frequencies!')
   record_dict = pickle.load(open(records_input_file, 'rb'))
 
-  ambiguity.cluster_attribute_combinations(record_dict.values(), role_type,
+  ambiguity.cluster_attribute_combinations(list(record_dict.values()), role_type,
                                            attribute_index_list,
                                            attribute_name)
 
   # For calculating frequencies for two different data sets,
   # we use the two data sets separately
-  record_list1 = [r for rid, r in record_dict.iteritems() if
+  record_list1 = [r for rid, r in record_dict.items() if
                   str(rid).startswith('10')]
-  record_list2 = [r for rid, r in record_dict.iteritems() if
+  record_list2 = [r for rid, r in record_dict.items() if
                   str(rid).startswith('20')]
   assert len(record_dict) == len(record_list1) + len(record_list2)
 
@@ -92,7 +92,7 @@ def generate_atomic_nodes(songs_wf_file, sim_func_dict):
   record_list_wf1 = [r for r in songs_list if str(r[c.I_ID]).startswith('10')]
   record_list_wf2 = [r for r in songs_list if str(r[c.I_ID]).startswith('20')]
 
-  for i_attribute, sim_function in sim_func_dict.iteritems():
+  for i_attribute, sim_function in sim_func_dict.items():
     atomic_node_dict[i_attribute] = {}
 
     value_list1 = list({p[i_attribute] for p in record_list_wf1})
@@ -110,8 +110,8 @@ def generate_atomic_nodes(songs_wf_file, sim_func_dict):
     logging.info('1 ---- {} : {}'.format(i_attribute, len(value_list1)))
     logging.info('2 ---- {} : {}'.format(i_attribute, len(value_list2)))
 
-    for i in xrange(len(value_list1)):
-      for j in xrange(len(value_list2)):
+    for i in range(len(value_list1)):
+      for j in range(len(value_list2)):
         key = (value_list1[i], value_list2[j])
         if key in atomic_node_dict[i_attribute] or \
             (value_list2[j], value_list1[i]) in atomic_node_dict[i_attribute]:

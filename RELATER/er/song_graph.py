@@ -58,8 +58,7 @@ class SONG_GRAPH(BASE_GRAPH):
 
     self.attributes = sim_attr_init_func(atomic_t)
     self.unique_record_count = \
-      len(filter(lambda s: str(s[c.I_ID]).startswith('10'),
-                 self.record_dict.itervalues()))
+      len([s for s in iter(self.record_dict.values()) if str(s[c.I_ID]).startswith('10')])
     self.pairs_file = settings.data_set_dir + 'pairs/1/s7-n50-S-S.csv'
 
     self.gt_links_dict = songs_data_loader.retrieve_ground_truth_links(
@@ -166,7 +165,7 @@ class SONG_GRAPH(BASE_GRAPH):
     for node_id in node_id_set:
 
       node = self.G.nodes[node_id]
-      if c.SIM_REL not in node.iterkeys():
+      if c.SIM_REL not in iter(node.keys()):
         node[c.SIM_REL] = 0.0
       if node[c.STATE] == State.MERGED:
         continue
@@ -213,7 +212,7 @@ class SONG_GRAPH(BASE_GRAPH):
 
     # Enumerate processed links
     processed_links_dict = defaultdict(set)
-    for e_id, entity in self.entity_dict.iteritems():
+    for e_id, entity in self.entity_dict.items():
 
       song_id_list = list(entity[c.ROLES]['S'])
 

@@ -21,7 +21,7 @@ def generate_people_dict():
 
   output_filename = '{}people-{}.gpickle'.format(settings.output_home_directory,
                                                  c.data_set)
-  pickle.dump(people_dict.values(), open(output_filename, 'wb'))
+  pickle.dump(list(people_dict.values()), open(output_filename, 'wb'))
 
 
 def append_people_dict_frequencies(role_type):
@@ -55,7 +55,7 @@ def generate_atomic_nodes(sim_func_dict):
   people_list = pickle.load(open(settings.people_file, 'rb'))
 
   atomic_node_dict = {}
-  for i_attribute, sim_function in sim_func_dict.iteritems():
+  for i_attribute, sim_function in sim_func_dict.items():
     atomic_node_dict[i_attribute] = defaultdict(dict)
 
     value_set = {p[i_attribute] for p in people_list}
@@ -67,8 +67,8 @@ def generate_atomic_nodes(sim_func_dict):
     value_list = list(value_set)
     value_list.sort()
 
-    for i in xrange(len(value_list)):
-      for j in xrange(i, len(value_list)):
+    for i in range(len(value_list)):
+      for j in range(i, len(value_list)):
         key = (value_list[i], value_list[j])
 
         # Using cache is useless as the values are unique

@@ -64,8 +64,7 @@ class CIVIL_GRAPH(BASE_GRAPH):
 
     self.attributes = sim_attr_init_func(atomic_t)
     self.unique_record_count = \
-      len(filter(lambda p: p[c.I_ROLE] == settings.role_type,
-                 self.record_dict.itervalues()))
+      len([p for p in iter(self.record_dict.values()) if p[c.I_ROLE] == settings.role_type])
 
     self.singleton_links_dict = {}
     for r in Links.get_singleton_links():
@@ -109,9 +108,9 @@ class CIVIL_GRAPH(BASE_GRAPH):
           continue
         # Get the sim value
         sim_val = None
-        if (addr1, addr2) in geocode_sim_dict.keys():
+        if (addr1, addr2) in list(geocode_sim_dict.keys()):
           sim_val = geocode_sim_dict[(addr1, addr2)]
-        elif (addr2, addr1) in geocode_sim_dict.keys():
+        elif (addr2, addr1) in list(geocode_sim_dict.keys()):
           sim_val = geocode_sim_dict[(addr2, addr1)]
         elif addr1 in geocode_dict and addr2 in geocode_dict:
           d = util.geocode_distance(geocode_dict[addr1], geocode_dict[addr2])
@@ -334,37 +333,37 @@ class CIVIL_GRAPH(BASE_GRAPH):
     # People are separated based on gender.
     # A person without a proper gender is assigned to both categories.
     f = list(filter((lambda p: p[c.I_SEX] in [Sex.F, '']),
-                    self.record_dict.values()))
+                    list(self.record_dict.values())))
     m = list(filter((lambda p: p[c.I_SEX] in [Sex.M, '']),
-                    self.record_dict.values()))
+                    list(self.record_dict.values())))
 
     # People are categorized to each role based on gender
     females = {
-      'Bb': filter(lambda p: p[c.I_ROLE] == Role.Bb, f),
-      'Bp': filter(lambda p: p[c.I_ROLE] == Role.Bp, f),
-      'Mm': filter(lambda p: p[c.I_ROLE] == Role.Mm, f),
-      'Mbp': filter(lambda p: p[c.I_ROLE] == Role.Mbp, f),
-      'Mgp': filter(lambda p: p[c.I_ROLE] == Role.Mgp, f),
-      'Dd': filter(lambda p: p[c.I_ROLE] == Role.Dd, f),
-      'Ds': filter(lambda p: p[c.I_ROLE] == Role.Ds, f),
-      'Dp': filter(lambda p: p[c.I_ROLE] == Role.Dp, f)
+      'Bb': [p for p in f if p[c.I_ROLE] == Role.Bb],
+      'Bp': [p for p in f if p[c.I_ROLE] == Role.Bp],
+      'Mm': [p for p in f if p[c.I_ROLE] == Role.Mm],
+      'Mbp': [p for p in f if p[c.I_ROLE] == Role.Mbp],
+      'Mgp': [p for p in f if p[c.I_ROLE] == Role.Mgp],
+      'Dd': [p for p in f if p[c.I_ROLE] == Role.Dd],
+      'Ds': [p for p in f if p[c.I_ROLE] == Role.Ds],
+      'Dp': [p for p in f if p[c.I_ROLE] == Role.Dp]
     }
     logging.info('Female list sizes')
-    for key, f_list in females.iteritems():
+    for key, f_list in females.items():
       logging.info('\t %s %s' % (key, len(f_list)))
 
     males = {
-      'Bb': filter(lambda p: p[c.I_ROLE] == Role.Bb, m),
-      'Bp': filter(lambda p: p[c.I_ROLE] == Role.Bp, m),
-      'Mm': filter(lambda p: p[c.I_ROLE] == Role.Mm, m),
-      'Mbp': filter(lambda p: p[c.I_ROLE] == Role.Mbp, m),
-      'Mgp': filter(lambda p: p[c.I_ROLE] == Role.Mgp, m),
-      'Dd': filter(lambda p: p[c.I_ROLE] == Role.Dd, m),
-      'Ds': filter(lambda p: p[c.I_ROLE] == Role.Ds, m),
-      'Dp': filter(lambda p: p[c.I_ROLE] == Role.Dp, m)
+      'Bb': [p for p in m if p[c.I_ROLE] == Role.Bb],
+      'Bp': [p for p in m if p[c.I_ROLE] == Role.Bp],
+      'Mm': [p for p in m if p[c.I_ROLE] == Role.Mm],
+      'Mbp': [p for p in m if p[c.I_ROLE] == Role.Mbp],
+      'Mgp': [p for p in m if p[c.I_ROLE] == Role.Mgp],
+      'Dd': [p for p in m if p[c.I_ROLE] == Role.Dd],
+      'Ds': [p for p in m if p[c.I_ROLE] == Role.Ds],
+      'Dp': [p for p in m if p[c.I_ROLE] == Role.Dp]
     }
     logging.info('Male list sizes')
-    for key, f_list in males.iteritems():
+    for key, f_list in males.items():
       logging.info('\t %s %s' % (key, len(f_list)))
 
     # Optimization
@@ -378,7 +377,7 @@ class CIVIL_GRAPH(BASE_GRAPH):
     stats_dict = defaultdict(int)
 
     assert self.node_id >= max(self.G.nodes)
-    print 'Asserted'
+    print('Asserted')
 
     # -------------------------------------------------------------------------
     logging.info('Generating Bb relations starting from {}'.format(
@@ -728,9 +727,9 @@ class CIVIL_GRAPH(BASE_GRAPH):
     # People are separated based on gender.
     # A person without a proper gender is assigned to both categories.
     f_list = list(filter((lambda p: p[c.I_SEX] in [Sex.F, '']),
-                         self.record_dict.values()))
+                         list(self.record_dict.values())))
     m_list = list(filter((lambda p: p[c.I_SEX] in [Sex.M, '']),
-                         self.record_dict.values()))
+                         list(self.record_dict.values())))
 
     female_blocks = defaultdict(lambda: defaultdict(set))
     for female in f_list:
@@ -754,21 +753,21 @@ class CIVIL_GRAPH(BASE_GRAPH):
     stats_dict = defaultdict(int)
 
     for block in [female_blocks, male_blocks]:
-      for fname_key, sname_block in block.iteritems():
-        for sname_key, people_id_list in sname_block.iteritems():
+      for fname_key, sname_block in block.items():
+        for sname_key, people_id_list in sname_block.items():
 
           # People are categorized to each role based on gender
           #
-          people_list = map(lambda p_id: self.record_dict[p_id], people_id_list)
+          people_list = [self.record_dict[p_id] for p_id in people_id_list]
           people = {
-            'Bb': filter(lambda p: p[c.I_ROLE] == Role.Bb, people_list),
-            'Bp': filter(lambda p: p[c.I_ROLE] == Role.Bp, people_list),
-            'Mm': filter(lambda p: p[c.I_ROLE] == Role.Mm, people_list),
-            'Mbp': filter(lambda p: p[c.I_ROLE] == Role.Mbp, people_list),
-            'Mgp': filter(lambda p: p[c.I_ROLE] == Role.Mgp, people_list),
-            'Dd': filter(lambda p: p[c.I_ROLE] == Role.Dd, people_list),
-            'Ds': filter(lambda p: p[c.I_ROLE] == Role.Ds, people_list),
-            'Dp': filter(lambda p: p[c.I_ROLE] == Role.Dp, people_list)
+            'Bb': [p for p in people_list if p[c.I_ROLE] == Role.Bb],
+            'Bp': [p for p in people_list if p[c.I_ROLE] == Role.Bp],
+            'Mm': [p for p in people_list if p[c.I_ROLE] == Role.Mm],
+            'Mbp': [p for p in people_list if p[c.I_ROLE] == Role.Mbp],
+            'Mgp': [p for p in people_list if p[c.I_ROLE] == Role.Mgp],
+            'Dd': [p for p in people_list if p[c.I_ROLE] == Role.Dd],
+            'Ds': [p for p in people_list if p[c.I_ROLE] == Role.Ds],
+            'Dp': [p for p in people_list if p[c.I_ROLE] == Role.Dp]
           }
 
           blocking_key = '%s-%s' % (fname_key, sname_key)
@@ -1062,25 +1061,23 @@ class CIVIL_GRAPH(BASE_GRAPH):
     for block1, block2 in [(female_blocks, male_blocks),
                            (male_blocks, female_blocks)]:
 
-      for fname_key, sname_block1 in block1.iteritems():
-        for sname_key, people_id_list in sname_block1.iteritems():
+      for fname_key, sname_block1 in block1.items():
+        for sname_key, people_id_list in sname_block1.items():
 
           if len(block2[fname_key][sname_key]) > 1:
 
             # Block 1 people lists
-            people_list_1 = map(lambda p_id: self.record_dict[p_id],
-                                block1[fname_key][sname_key])
+            people_list_1 = [self.record_dict[p_id] for p_id in block1[fname_key][sname_key]]
             block1_people = {
-              'Bb': filter(lambda p: p[c.I_ROLE] == Role.Bb, people_list_1),
-              'Mm': filter(lambda p: p[c.I_ROLE] == Role.Mm, people_list_1)
+              'Bb': [p for p in people_list_1 if p[c.I_ROLE] == Role.Bb],
+              'Mm': [p for p in people_list_1 if p[c.I_ROLE] == Role.Mm]
             }
 
             # Block 2 people lists
-            people_list_2 = map(lambda p_id: self.record_dict[p_id],
-                                block2[fname_key][sname_key])
+            people_list_2 = [self.record_dict[p_id] for p_id in block2[fname_key][sname_key]]
             block2_people = {
-              'Mm': filter(lambda p: p[c.I_ROLE] == Role.Mm, people_list_2),
-              'Dd': filter(lambda p: p[c.I_ROLE] == Role.Dd, people_list_2)
+              'Mm': [p for p in people_list_2 if p[c.I_ROLE] == Role.Mm],
+              'Dd': [p for p in people_list_2 if p[c.I_ROLE] == Role.Dd]
             }
 
             # Birth parent - Marriage parent and Birth parent - Death parent
@@ -1131,17 +1128,15 @@ class CIVIL_GRAPH(BASE_GRAPH):
 
     logging.info('Generating cross gender marriage parents')
     link = 'Mbp-Mgp'
-    for fname_key, sname_block1 in female_blocks.iteritems():
-      for sname_key, people_id_list in sname_block1.iteritems():
+    for fname_key, sname_block1 in female_blocks.items():
+      for sname_key, people_id_list in sname_block1.items():
 
         if len(male_blocks[fname_key][sname_key]) > 1:
-          female_list = map(lambda p_id: self.record_dict[p_id],
-                            female_blocks[fname_key][sname_key])
-          bride_list = filter(lambda p: p[c.I_ROLE] == Role.Mm, female_list)
+          female_list = [self.record_dict[p_id] for p_id in female_blocks[fname_key][sname_key]]
+          bride_list = [p for p in female_list if p[c.I_ROLE] == Role.Mm]
 
-          male_list = map(lambda p_id: self.record_dict[p_id],
-                          male_blocks[fname_key][sname_key])
-          groom_list = filter(lambda p: p[c.I_ROLE] == Role.Mm, male_list)
+          male_list = [self.record_dict[p_id] for p_id in male_blocks[fname_key][sname_key]]
+          groom_list = [p for p in male_list if p[c.I_ROLE] == Role.Mm]
 
           for f_m in bride_list:
             for m_m in groom_list:
@@ -1412,11 +1407,11 @@ class CIVIL_GRAPH(BASE_GRAPH):
               if is_valid_merge(node_id_set):
                 merge_nodes(node_id_set)
 
-    print 'Bootstrap added nodes %s' % stats.added_neighbors_count
+    print('Bootstrap added nodes %s' % stats.added_neighbors_count)
     if len(stats.added_group_size) > 0:
-      print 'Bootstrap added group size avg %s' % (sum(
-        stats.added_group_size) * 1.0 / len(stats.added_group_size))
-      print 'Bootstrap added node group max %s' % (max(stats.added_group_size))
+      print('Bootstrap added group size avg %s' % (sum(
+        stats.added_group_size) * 1.0 / len(stats.added_group_size)))
+      print('Bootstrap added node group max %s' % (max(stats.added_group_size)))
     logging.info('Bootstrapping finished')
 
   def link(self, merge_threshold):
@@ -1433,14 +1428,14 @@ class CIVIL_GRAPH(BASE_GRAPH):
 
     merged_node_count = 0
     refined_count = 0
-    print merged_node_count
+    print(merged_node_count)
 
-    for id, entity in self.entity_dict.items():
+    for id, entity in list(self.entity_dict.items()):
       for role in [c.MOTHER, c.FATHER]:
         person_list = list(entity[role])
 
-        for i in xrange(len(person_list)):
-          for j in xrange(i + 1, len(person_list)):
+        for i in range(len(person_list)):
+          for j in range(i + 1, len(person_list)):
 
             key = (person_list[i], person_list[j])
             logging.debug('Entity {} relation {} : {}'
@@ -1466,8 +1461,8 @@ class CIVIL_GRAPH(BASE_GRAPH):
       for role in [c.SPOUSE, c.CHILDREN]:
         person_list = list(entity[role])
 
-        for i in xrange(len(person_list)):
-          for j in xrange(i + 1, len(person_list)):
+        for i in range(len(person_list)):
+          for j in range(i + 1, len(person_list)):
 
             key = (person_list[i], person_list[j])
             logging.debug('Entity {} relation {} : {}'
@@ -1487,7 +1482,7 @@ class CIVIL_GRAPH(BASE_GRAPH):
                     refined_count += 1
                     merge_nodes([node_id])
 
-    print 'Refined merged count {}'.format(refined_count)
+    print('Refined merged count {}'.format(refined_count))
 
   def __merge_nodes__(self, node_id_set):
 
@@ -1502,7 +1497,7 @@ class CIVIL_GRAPH(BASE_GRAPH):
 
       node = self.G.nodes[node_id]
 
-      if c.SIM_REL not in node.iterkeys():
+      if c.SIM_REL not in iter(node.keys()):
         node[c.SIM_REL] = 0.0
 
       if node[c.STATE] == State.MERGED:
@@ -1726,7 +1721,7 @@ class CIVIL_GRAPH(BASE_GRAPH):
     people_dict = self.record_dict
 
     # Bridges
-    for id, entity in self.entity_dict.copy().iteritems():
+    for id, entity in self.entity_dict.copy().items():
       g = entity['g']
 
       if g.number_of_nodes() < hyperparams.bridges_n:
@@ -1763,7 +1758,7 @@ class CIVIL_GRAPH(BASE_GRAPH):
             person[c.I_ENTITY_ID] = None
 
     # Connectivity
-    for id, entity in self.entity_dict.copy().iteritems():
+    for id, entity in self.entity_dict.copy().items():
       g = entity['g']
 
       if g.number_of_nodes() <= 3:
@@ -1898,7 +1893,7 @@ class CIVIL_GRAPH(BASE_GRAPH):
         # For example, if the same cert id appear as Dd and Dp, these are two
         # different entities of a parent and child
         for role in Role.list():
-          other_roles = filter(lambda x: x != role, Role.list())
+          other_roles = [x for x in Role.list() if x != role]
 
           e1_role_cert_id_set = {certid for _, _, certid in
                                  entity1[c.ROLES][role]}
@@ -2027,7 +2022,7 @@ class CIVIL_GRAPH(BASE_GRAPH):
         # Same certificate ids cannot appear as different roles
         # For example, if the same cert id appear as Dd and Dp, these are two
         # different entities of a parent and child
-        other_roles = filter(lambda x: x != non_merged[c.I_ROLE], Role.list())
+        other_roles = [x for x in Role.list() if x != non_merged[c.I_ROLE]]
         entity_role_cert_id_set = {certid for role2 in other_roles for
                                    _, _, certid in entity[c.ROLES][role2]}
 
@@ -2577,7 +2572,7 @@ class CIVIL_GRAPH(BASE_GRAPH):
   # ---------------------------------------------------------------------------
   def validate_ground_truth(self, graph_scenario, t):
     merged_person_roles_list = list()
-    for merged_person in self.entity_dict.itervalues():
+    for merged_person in self.entity_dict.values():
       merged_person_roles = merged_person[c.ROLES]
       p = defaultdict(set)
       p['E_ID'] = merged_person[c.ENTITY_ID]
@@ -2644,10 +2639,10 @@ class CIVIL_GRAPH(BASE_GRAPH):
       if not file_exists:
         w.writerow(['link', 'scenario', 'total'] + c.LINKAGE_REASONS_LIST)
       scenario = settings.scenario
-      for link, reason_counter in fn_reasons_dict.iteritems():
+      for link, reason_counter in fn_reasons_dict.items():
         row = [link, scenario, len(fn_reasons_dict[link])]
         for reason in c.LINKAGE_REASONS_LIST:
-          if reason in reason_counter.iterkeys():
+          if reason in iter(reason_counter.keys()):
             row.append(reason_counter.get(reason))
           else:
             row.append(0)

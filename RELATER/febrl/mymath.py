@@ -420,8 +420,8 @@ def _trim(n, d, max_d):
 	i = (max_d-before_last_d)/last_d
 	alternative_n = before_last_n + i*last_n
 	alternative_d = before_last_d + i*last_d
-        alternative = _Rational(alternative_n, alternative_d)
-        last = _Rational(last_n, last_d)
+	alternative = _Rational(alternative_n, alternative_d)
+	last = _Rational(last_n, last_d)
 	num = _Rational(n, d)
 	if abs(alternative-num)<abs(last-num):
 		return alternative_n, alternative_d
@@ -503,7 +503,7 @@ class _Rational:
 	def __init__(self, n, d):
 		if d == 0:
 			return n/d
-		n, d = map(long, (n, d))
+		n, d = list(map(int, (n, d)))
 		if d < 0:
 			n *= -1
 			d *= -1
@@ -522,7 +522,7 @@ class _Rational:
 		return '%(n)s/%(d)s' % self.__dict__
 
 	def __coerce__(self, other):
-		for int in (type(1), type(1L)):
+		for int in (type(1), type(1)):
 			if isinstance(other, int):
 				return self, rational(other)
 		if type(other) == type(1.0):
@@ -569,12 +569,12 @@ class _Rational:
 		return self.n
 
 	def __int__(self):
-		return int(long(self))
+		return int(int(self))
 
 	def __float__(self):
 		# Avoid NaNs like the plague
-		if self.d > 1L<<1023:
-			self = self.trim(1L<<1023)
+		if self.d > 1<<1023:
+			self = self.trim(1<<1023)
 		return float(self.n)/float(self.d)
 
 	def __pow__(self, exp, z=None):
@@ -583,7 +583,7 @@ class _Rational:
 		if isinstance(exp, _Rational):
 			if exp.d == 1:
 				exp = exp.n
-		if isinstance(exp, type(1)) or isinstance(exp, type(1L)):
+		if isinstance(exp, type(1)) or isinstance(exp, type(1)):
 			if exp < 0:
 				return _Rational(self.d**-exp, self.n**-exp)
 			return _Rational(self.n**exp, self.d**exp)
@@ -601,7 +601,7 @@ class _Rational:
 	def __complex__(self):
 		return complex(float(self))
 
-	def __nonzero__(self):
+	def __bool__(self):
 		return self.n != 0
 
 	def __pos__(self):
@@ -657,19 +657,19 @@ def _parse_number(num):
 	if 'e' in num:
 		mant, exp = num.split('e', 1)
 		mant = _parse_number(mant)
-		exp = long(exp)
+		exp = int(exp)
 		return mant*(rational(10)**rational(exp))
 	if '.' in num:
 		i, f = num.split('.', 1)
-		i = long(i)
-		f = rational(long(f), 10L**len(f))
+		i = int(i)
+		f = rational(int(f), 10**len(f))
 		return i+f
-	return rational(long(num))
+	return rational(int(num))
 
-def rational(n, d=1L):
-	if type(n) in (type(''), type(u'')) :
+def rational(n, d=1):
+	if type(n) in (type(''), type('')) :
 		n = _parse_number(n)
-	if type(d) in (type(''), type(u'')) :
+	if type(d) in (type(''), type('')) :
 		d = _parse_number(d)
 	if isinstance(n, type(1.0)):
 		n = _float_to_ratio(n)
@@ -684,8 +684,8 @@ def rational(n, d=1L):
 		return rational(n*d.d, d.n)
 	return _Rational(n, d)
 
-import __builtin__
-__builtin__.rational = rational
+import builtins
+builtins.rational = rational
 
 # =============================================================================
 #
@@ -723,7 +723,7 @@ def arith_coder_train(text):
     tot =   0
     probs = {}
     prev =  rational(0)
-    for c, count in counts.items():
+    for c, count in list(counts.items()):
         next =     rational(tot + count, tot_letters)
         probs[c] = (prev, next)
         prev =     next
@@ -753,7 +753,7 @@ def arith_coder_encode(text, probs):
     # gives me the minimum number of bits needed to resolve
     # down to the end-of-data character.
     delta = (maxval - minval)/2
-    nbits = 0L
+    nbits = 0
     while delta < 1:
         nbits = nbits + 1
         delta = delta << 1

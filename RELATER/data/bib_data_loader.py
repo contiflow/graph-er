@@ -77,7 +77,7 @@ def __retrieve_data__(filename, origin_id):
       record_dict[record[origin_id]] = record
       i += 1
   logging.info(
-    'Retrieved records of {} : {}'.format(origin_id, len(record_dict.keys())))
+    'Retrieved records of {} : {}'.format(origin_id, len(list(record_dict.keys()))))
   return record_dict
 
 
@@ -99,7 +99,7 @@ def enumerate_records(author_file, pubs_file):
     publication_dict = {}
     pub_id = 0
 
-    for r in ds.itervalues():
+    for r in ds.values():
 
       # Adding authors
       author_id_list = list()
@@ -169,7 +169,7 @@ def raw_data_set_stats(data_dict, columns, name):
   if not os.path.isdir(settings.stats_dir):
     os.makedirs(settings.stats_dir)
 
-  df = pd.DataFrame(data_dict.itervalues(), columns=columns)
+  df = pd.DataFrame(iter(data_dict.values()), columns=columns)
 
   # Stats of numerical fields
   info_file = os.path.join(settings.stats_dir, 'numerical_fields.csv')
@@ -202,7 +202,7 @@ def enumerate_ground_truthlinks(datasetA_abbreviation, datasetB_abbreviation):
     pub_origin_id_id_dict_A = dict()
     pub_origin_id_id_dict_B = dict()
     pub_dict = pickle.load(open(settings.pub_file, 'rb'))
-    for pub in pub_dict.itervalues():
+    for pub in pub_dict.values():
       if pub[c.I_ID].startswith(datasetA_abbreviation):
         pub_origin_id_id_dict_A[pub[c.BB_I_ORIGIN_ID]] = pub[c.I_ID]
       elif pub[c.I_ID].startswith(datasetB_abbreviation):
@@ -231,7 +231,7 @@ def analyse_authors():
 
   none_dict = defaultdict(int)
   singleton_dict = defaultdict(int)
-  for author in author_dict.itervalues():
+  for author in author_dict.values():
     if author[c.I_ID].split('-')[0] == 'DD':
       for i in [c.BB_I_FNAME, c.BB_I_MNAME, c.BB_I_SNAME]:
         if author[i] is None:
@@ -243,12 +243,12 @@ def analyse_authors():
 
   for i, name in [(c.BB_I_FNAME, 'fname'), (c.BB_I_MNAME, 'mname'),
                   (c.BB_I_SNAME, 'sname')]:
-    print 'Attribute %s ----------' % name
-    print 'None count %s' % none_dict[i]
-    print 'None percentage %s' % (none_dict[i] * 100.0 / len(author_dict))
-    print 'Singleton count %s' % singleton_dict[i]
-    print 'Singleton percentage %s' % (singleton_dict[i] * 100.0 / len(
-      author_dict))
+    print('Attribute %s ----------' % name)
+    print('None count %s' % none_dict[i])
+    print('None percentage %s' % (none_dict[i] * 100.0 / len(author_dict)))
+    print('Singleton count %s' % singleton_dict[i])
+    print('Singleton percentage %s' % (singleton_dict[i] * 100.0 / len(
+      author_dict)))
 
 
 if __name__ == '__main__':

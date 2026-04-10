@@ -132,14 +132,14 @@ def print_node_details_fn(node_id_set, G, people_dict):
 
 
 def print_node_details(G, people_dict, node_id, node, p1, p2):
-  print '--------------------------------------------------------'
-  print 'Bp-Mbp node sim {}'.format(node[c.SIM])
+  print('--------------------------------------------------------')
+  print('Bp-Mbp node sim {}'.format(node[c.SIM]))
   util.print_atomic_nodes(get_atomic_nodes(G, node_id), p1, p2)
 
   child_node_id = get_neighbor(G, node_id, c.CHILDREN)
   if child_node_id is not None:
     child_node = G.nodes[child_node_id]
-    print '\nChild node sim {}'.format(child_node[c.SIM])
+    print('\nChild node sim {}'.format(child_node[c.SIM]))
     util.print_atomic_nodes(get_atomic_nodes(G, child_node_id),
                             people_dict[child_node[c.R1]],
                             people_dict[child_node[c.R2]])
@@ -147,7 +147,7 @@ def print_node_details(G, people_dict, node_id, node, p1, p2):
   spouse_node_id = get_neighbor(G, node_id, c.SPOUSE)
   if spouse_node_id is not None:
     spouse_node = G.nodes[spouse_node_id]
-    print '\nSpouse node sim {}'.format(spouse_node[c.SIM])
+    print('\nSpouse node sim {}'.format(spouse_node[c.SIM]))
     util.print_atomic_nodes(get_atomic_nodes(G, spouse_node_id),
                             people_dict[spouse_node[c.R1]],
                             people_dict[spouse_node[c.R2]])
@@ -163,7 +163,7 @@ def analyse_fn_fp_reasons(false_positive_link_dict, false_negative_link_dict,
 
   # Generate cert id to pid dictionary
   cert_id_role_person_id_dict = dict()
-  for pid, person in people_dict.iteritems():
+  for pid, person in people_dict.items():
     cert_id_role = util.append_role(person[c.I_CERT_ID], person[c.I_ROLE],
                                     person[c.I_SEX])
     cert_id_role_person_id_dict[cert_id_role] = pid
@@ -351,10 +351,10 @@ def analyse_fn_fp_reasons(false_positive_link_dict, false_negative_link_dict,
           stat_writer.writerow([stat_name, fn_stats_dict[stat], percentage,
                                 fn_none_dict[stat], none_percentage, avg])
 
-  print 'Bp-Bp NG both entities %s' % both_entity_count
-  print 'Bp-Bp NG both non-entities %s' % both_record_count
-  print 'Bp-Bp NG one entity %s' % one_entity_count
-  print 'Bp-Bp NG tot %s' % total
+  print('Bp-Bp NG both entities %s' % both_entity_count)
+  print('Bp-Bp NG both non-entities %s' % both_record_count)
+  print('Bp-Bp NG one entity %s' % one_entity_count)
+  print('Bp-Bp NG tot %s' % total)
 
   # fn_reason_file_name = '{}fn-reason-{}-a{}-m{}-{}.csv'.format(
   #   settings.results_dir,
@@ -384,10 +384,10 @@ def __persist_reasons__(counter_dict, file_name, false_negative_link_dict):
     if not file_exists:
       w.writerow(['link', 'scenario', 'total'] + column_list)
     scenario = settings.scenario
-    for link, link_counter in counter_dict.iteritems():
+    for link, link_counter in counter_dict.items():
       row = [link, scenario, len(false_negative_link_dict[link])]
       for reason in column_list:
-        if reason in link_counter.iterkeys():
+        if reason in iter(link_counter.keys()):
           # percentage = round((link_counter.get(reason) *100.0 /
           #                     len(false_negative_link_dict[link])), 2)
           # str = '%s (%s%%)' % (link_counter.get(reason), percentage)
@@ -407,8 +407,8 @@ def analyse_graphs(g):
     elif node[c.TYPE1] == c.N_ATOMIC:
       atomic_nodes += 1
 
-  print 'Atomic nodes : {}'.format(atomic_nodes)
-  print 'Rel nodes : {}'.format(rel_nodes)
+  print('Atomic nodes : {}'.format(atomic_nodes))
+  print('Rel nodes : {}'.format(rel_nodes))
 
 
 def print_attributes(p1, p2, csv_writer=None):

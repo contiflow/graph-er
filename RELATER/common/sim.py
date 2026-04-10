@@ -91,7 +91,7 @@ def atomic_amb_weighted_average(node, atomic_sim_dict, p1, p2, N, attributes):
 
   SIM_AMB = c.SIM_AMB
 
-  if SIM_AMB in node.iterkeys():
+  if SIM_AMB in iter(node.keys()):
     amb_sim = node[SIM_AMB]
   else:
     # Why we are summing up frequencies
@@ -117,13 +117,13 @@ def calculate_weighted_atomic_str_sim(atomic_sim_dict, attributes_meta):
   extra_attributes = attributes_meta.extra_attr.attributes
 
   must_attribute_sim_list = [sim for attribute, sim in
-                             atomic_sim_dict.iteritems() if
+                             atomic_sim_dict.items() if
                              attribute in must_attributes]
   core_attribute_sim_list = [sim for attribute, sim in
-                             atomic_sim_dict.iteritems() if
+                             atomic_sim_dict.items() if
                              attribute in core_attributes]
   extra_attribute_sim_list = [sim for attribute, sim in
-                              atomic_sim_dict.iteritems() if
+                              atomic_sim_dict.items() if
                               attribute in extra_attributes]
 
   # If must attributes are absent, must attribute weight is given to core
@@ -231,7 +231,7 @@ def def1_atomic_sim_high_priority_only(atomic_sim_dict, attributes):
   if len(atomic_sim_dict) == 0:
     return 0.0
   core_attribute_sim_list = [sim for attribute, sim in
-                             atomic_sim_dict.iteritems() if
+                             atomic_sim_dict.items() if
                              attribute in attributes.core_attributes]
   core_attribute_sim_list.sort(reverse=True)
   core_attribute_average = sum(core_attribute_sim_list[
@@ -239,7 +239,7 @@ def def1_atomic_sim_high_priority_only(atomic_sim_dict, attributes):
                            attributes.core_least_count
 
   extra_attribute_sim_list = [sim for attribute, sim in
-                              atomic_sim_dict.iteritems() if
+                              atomic_sim_dict.items() if
                               attribute in attributes.extra_attributes]
   extra_attribute_sim_list.sort(reverse=True)
   extra_attribute_average = sum(extra_attribute_sim_list[
