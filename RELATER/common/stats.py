@@ -84,6 +84,11 @@ dong_relational = 0
 a_time = 0
 r_time = 0
 
+prereq_time = 0.0
+graph_gen_time = 0.0
+bootstrap_time = 0.0
+link_time = 0.0
+
 
 def count_people_types(females, males):
   logging.info('Stats on females : ')
@@ -166,7 +171,8 @@ def persist_gt_analysis(gt_links_dict, processed_links_dict,
   with open(filename, 'a') as results_file:
     heading_list = ['link', 'individual_link', 'merge_t', 'atomic_t', 'def',
                     'scenario', 'GT', 'P', 'TP', 'FP', 'FN', 'Pre', 'Re',
-                    'Fstar', 'time']
+                    'Fstar', 'time_prereq', 'time_graph_gen',
+                    'time_bootstrap', 'time_link', 'time']
     writer = csv.DictWriter(results_file, fieldnames=heading_list)
     if not file_exists:
       writer.writeheader()
@@ -181,6 +187,8 @@ def persist_gt_analysis(gt_links_dict, processed_links_dict,
       fp = stats_dict['fp'][link]
       fn = stats_dict['fn'][link]
       f_star = round(tp * 100.0 / (tp + fp + fn), 2)
+      total_time = round(prereq_time + graph_gen_time + bootstrap_time +
+                         link_time, 2)
       result_dict = {
         'link': link,
         'individual_link': get_link_indi_links(link),
@@ -196,7 +204,11 @@ def persist_gt_analysis(gt_links_dict, processed_links_dict,
         'Pre': stats_dict['pre'][link],
         'Re': stats_dict['re'][link],
         'Fstar': f_star,
-        'time' : t
+        'time_prereq': prereq_time,
+        'time_graph_gen': graph_gen_time,
+        'time_bootstrap': bootstrap_time,
+        'time_link': link_time,
+        'time': total_time
       }
       writer.writerow(result_dict)
     fcntl.flock(results_file, fcntl.LOCK_UN)

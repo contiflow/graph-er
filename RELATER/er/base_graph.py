@@ -180,7 +180,7 @@ class BASE_GRAPH():
 
         self.atomic_nodes[i_attribute] = {}
 
-        for key, atomic_sim in atomic_node_dict[i_attribute].items():
+        for key, atomic_sim in atomic_node_dict.get(i_attribute, {}).items():
           if atomic_sim >= attributes_cat.min_sim:
             node_id += 1
             self.G.add_node(node_id, r1=key[0], r2=key[1], t1=c.N_ATOMIC,

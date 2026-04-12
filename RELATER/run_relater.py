@@ -38,13 +38,33 @@ def _merge_config(config_path):
 
 
 def _build_argv(prog, dataset, atomic_t, bootstrap_t, merge_t, wa, bridges_n,
-                scenario_prefix):
+                scenario_prefix, use_vector_blocking=False,
+                vector_model='all-MiniLM-L6-v2', vector_top_k=50,
+                vector_min_cosine=0.5, vector_sim_blend=0.0,
+                vector_hnsw_m=32, vector_hnsw_ef_construction=128,
+                vector_hnsw_ef_search=128, vector_block_atomic=False,
+                year_tolerance=0):
   argv = [
     prog, dataset, str(atomic_t), str(bootstrap_t), str(merge_t), str(wa),
     str(bridges_n)
   ]
   if scenario_prefix:
     argv.append(str(scenario_prefix))
+  if use_vector_blocking:
+    argv.extend([
+      '--use-vector-blocking', 'true',
+      '--vector-model', vector_model,
+      '--vector-top-k', str(vector_top_k),
+      '--vector-min-cosine', str(vector_min_cosine),
+      '--vector-sim-blend', str(vector_sim_blend),
+      '--vector-hnsw-m', str(vector_hnsw_m),
+      '--vector-hnsw-ef-construction', str(vector_hnsw_ef_construction),
+      '--vector-hnsw-ef-search', str(vector_hnsw_ef_search),
+    ])
+    if vector_block_atomic:
+      argv.extend(['--vector-block-atomic', 'true'])
+    if year_tolerance > 0:
+      argv.extend(['--year-tolerance', str(year_tolerance)])
   return argv
 
 
@@ -62,6 +82,28 @@ def main():
   parser.add_argument('--wa', type=float, dest='wa')
   parser.add_argument('--bridges-n', type=float, dest='bridges_n')
   parser.add_argument('--scenario-prefix', default='', dest='scenario_prefix')
+
+  # Vector retrieval arguments
+  parser.add_argument('--use-vector-blocking', action='store_true', default=False,
+                      dest='use_vector_blocking')
+  parser.add_argument('--vector-model', default=None,
+                      dest='vector_model')
+  parser.add_argument('--vector-top-k', type=int, default=None,
+                      dest='vector_top_k')
+  parser.add_argument('--vector-min-cosine', type=float, default=None,
+                      dest='vector_min_cosine')
+  parser.add_argument('--vector-sim-blend', type=float, default=None,
+                      dest='vector_sim_blend')
+  parser.add_argument('--vector-hnsw-m', type=int, default=None,
+                      dest='vector_hnsw_m')
+  parser.add_argument('--vector-hnsw-ef-construction', type=int, default=None,
+                      dest='vector_hnsw_ef_construction')
+  parser.add_argument('--vector-hnsw-ef-search', type=int, default=None,
+                      dest='vector_hnsw_ef_search')
+  parser.add_argument('--vector-block-atomic', action='store_true', default=False,
+                      dest='vector_block_atomic')
+  parser.add_argument('--year-tolerance', type=int, default=0,
+                      dest='year_tolerance')
 
   args = parser.parse_args()
   cfg = _merge_config(args.config) if args.config else {}
@@ -84,8 +126,28 @@ def main():
   bridges_n = pick('bridges_n', args.bridges_n, 10.0)
   scenario_prefix = args.scenario_prefix or cfg.get('scenario_prefix', '')
 
+  use_vector_blocking = args.use_vector_blocking or cfg.get('use_vector_blocking', False)
+  vector_model = pick('vector_model', args.vector_model, 'all-MiniLM-L6-v2')
+  vector_top_k = pick('vector_top_k', args.vector_top_k, 50)
+  vector_min_cosine = pick('vector_min_cosine', args.vector_min_cosine, 0.5)
+  vector_sim_blend = pick('vector_sim_blend', args.vector_sim_blend, 0.0)
+  vector_hnsw_m = pick('vector_hnsw_m', args.vector_hnsw_m, 32)
+  vector_hnsw_ef_construction = pick('vector_hnsw_ef_construction',
+                                      args.vector_hnsw_ef_construction, 128)
+  vector_hnsw_ef_search = pick('vector_hnsw_ef_search',
+                                args.vector_hnsw_ef_search, 128)
+
+  vector_block_atomic = (args.vector_block_atomic or
+                          cfg.get('vector_block_atomic', False))
+  year_tolerance = pick('year_tolerance', args.year_tolerance, 0)
+
   new_argv = _build_argv(parser.prog or 'run_relater', dataset, atomic_t,
-                         bootstrap_t, merge_t, wa, bridges_n, scenario_prefix)
+                         bootstrap_t, merge_t, wa, bridges_n, scenario_prefix,
+                         use_vector_blocking, vector_model, vector_top_k,
+                         vector_min_cosine, vector_sim_blend,
+                         vector_hnsw_m, vector_hnsw_ef_construction,
+                         vector_hnsw_ef_search, vector_block_atomic,
+                         year_tolerance)
 
   if _INNER not in sys.path:
     sys.path.insert(0, _INNER)

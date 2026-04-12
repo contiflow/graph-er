@@ -4,6 +4,21 @@ import sys
 import time
 from collections import defaultdict
 
+# NetworkX compatibility shim for Python 3
+try:
+  import networkx as nx
+  if not hasattr(nx, 'write_gpickle'):
+    def _write_gpickle(obj, path):
+      with open(path, 'wb') as f:
+        pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
+    def _read_gpickle(path):
+      with open(path, 'rb') as f:
+        return pickle.load(f)
+    nx.write_gpickle = _write_gpickle
+    nx.read_gpickle = _read_gpickle
+except Exception:
+  pass
+
 from data import data_loader
 from er.hh_graph import HH_GRAPH
 from common import constants as c, settings, util, ambiguity, sim, \
