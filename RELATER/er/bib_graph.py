@@ -107,9 +107,29 @@ class BIB_GRAPH(BASE_GRAPH):
     p_attributes = self.type_meta_dict['P'].attributes
     a_attributes = self.type_meta_dict['A'].attributes
 
+    # --- Build candidate pair iterator ---
+    if hyperparams.use_vector_blocking:
+      from common.vector_blocking import block_publication_pairs
+      vector_config = {
+        'model_name': hyperparams.vector_model,
+        'top_k': hyperparams.vector_top_k,
+        'min_cosine': hyperparams.vector_min_cosine,
+        'hnsw_m': hyperparams.vector_hnsw_m,
+        'hnsw_ef_construction': hyperparams.vector_hnsw_ef_construction,
+        'hnsw_ef_search': hyperparams.vector_hnsw_ef_search,
+        'cache_dir': settings.embedding_cache_dir,
+      }
+      candidate_pairs = block_publication_pairs(
+        record_dict1, self.dataset1_abbreviation,
+        self.dataset2_abbreviation, vector_config)
+      pair_iter = [(record_dict1[id1], record_dict1[id2])
+                   for id1, id2 in candidate_pairs]
+    else:
+      pair_iter = [(r1, r2) for r1 in record_list1 for r2 in record_list2]
+    # --- End candidate pair iterator ---
+
     E_BOOL_W = c.E_BOOL_W
-    for r1 in record_list1:
-      for r2 in record_list2:
+    for r1, r2 in pair_iter:
 
         # Add primary node, a publication pair
         primary_node_id = self.__add_single_node__(r1, r2, 'P-P', p_attributes)
@@ -191,7 +211,7 @@ class BIB_GRAPH(BASE_GRAPH):
         if type(key2) == str and len(key2) == 1:
           key1 = key1[0]
 
-      if (key1, key2) in self.atomic_nodes[attr_index]:
+      if (key1, key2) in self.atomic_nodes.get(attr_index, {}):
         incoming_atomic_nodes.append(
           (attr_index,
            self.atomic_nodes[attr_index][(key1, key2)]))
@@ -349,7 +369,9 @@ class BIB_GRAPH(BASE_GRAPH):
       # (node_id, sim)
       for node_id in init_node_id_set:
         node = nodes[node_id]
-        assert node[c.SIM_ATOMIC] != 0
+        if node[c.SIM_ATOMIC] == 0:
+          node[c.STATE] = nonmerge
+          continue
 
         if node[c.TYPE2] == 'P-P':
           attr_sim_func_dict = attributes_meta.pubs_sim_func
@@ -477,6 +499,73 @@ class BIB_GRAPH(BASE_GRAPH):
     self.link_gdg(merge_threshold, None)
     sin_t = 0.95 if c.data_set == 'dblp-scholar1' else 0.9
     self.merge_singletons(sin_t)
+    self.refine(merge_threshold)
+
+  def refine(self, merge_threshold):
+    """
+    Refinement step: after initial merging, iterate over each entity and check
+    all pairs of records within the same entity. If a relationship node exists
+    for a pair that was not yet merged, enrich it and attempt to merge it.
+
+    This catches cross-dataset record pairs that belong to the same entity but
+    were not captured during the GDG or singleton merging phases.
+    """
+    logging.info('REFINING STEP')
+
+    nodes = self.G.nodes
+    is_valid_node_merge = self.__is_valid_node_merge__
+    merge_nodes = self.__merge_nodes__
+    enrich_node = self.__enrich_node__
+
+    refined_count = 0
+    for e_id, entity in list(self.entity_dict.items()):
+
+      node_type = entity.get('type', 'P')
+      record_dict = self.type_meta_dict[node_type].record_dict
+
+      if node_type == 'P':
+        attr_sim_func_dict = attributes_meta.pubs_sim_func
+      elif node_type == 'A':
+        attr_sim_func_dict = attributes_meta.authors_sim_func
+      else:
+        continue
+
+      role_records = list(entity[c.ROLES].get(node_type, set()))
+
+      # Only consider cross-dataset pairs (one from ds1, one from ds2)
+      for i in range(len(role_records)):
+        for j in range(i + 1, len(role_records)):
+          id1, id2 = role_records[i], role_records[j]
+
+          # Skip if both from same dataset
+          if (id1.startswith(self.dataset1_abbreviation) and
+              id2.startswith(self.dataset1_abbreviation)) or \
+             (id1.startswith(self.dataset2_abbreviation) and
+              id2.startswith(self.dataset2_abbreviation)):
+            continue
+
+          node_id = self.__get_existing_rel_node_id__(id1, id2)
+          if node_id is None:
+            continue
+
+          node = nodes[node_id]
+          if node[c.STATE] == State.MERGED:
+            continue
+
+          enrich_node(node_id, node, attr_sim_func_dict)
+
+          if node[c.SIM_ATOMIC] >= merge_threshold:
+            if is_valid_node_merge([node_id]):
+              logging.debug('--- Refine: valid merge {}-{}'.format(id1, id2))
+              refined_count += 1
+              merge_nodes([node_id])
+            else:
+              node[c.STATE] = State.NONMERGE
+          else:
+            node[c.STATE] = State.INACTIVE
+
+    logging.info('Refined merged count {}'.format(refined_count))
+    print('Refined merged count {}'.format(refined_count))
 
   def __update_reason__(self, node_id_set, nodes, reason):
 
@@ -780,6 +869,9 @@ class BIB_GRAPH(BASE_GRAPH):
       # not, remove the existing edge with the atomic node and add a
       # new edge between the highest similar atomic attribute pair.
       for sim_attr_i, sim_attr_func in attr_sim_func_dict.items():
+        if sim_attr_i not in entity1 or sim_attr_i not in entity2:
+          continue
+
         highest_sim_pair = ()
         highest_sim = 0
 
@@ -824,6 +916,9 @@ class BIB_GRAPH(BASE_GRAPH):
       # new edge between the highest similar atomic attribute pair.
       for sim_attr_i, sim_attr_func in attr_sim_func_dict.items():
         if person[sim_attr_i] is None:
+          continue
+
+        if sim_attr_i not in entity:
           continue
 
         highest_sim_pair = ()

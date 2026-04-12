@@ -166,3 +166,9 @@ results_dir = '{}er/'.format(output_home_directory)
 result_file = '{}results.csv'.format(results_dir)
 entity_file = '{}entities-{}.gpickle'.format(results_dir, hyperparams.scenario)
 stats_dir = '{}stats/'.format(output_home_directory)
+
+# Vector retrieval cache directory
+if hyperparams.use_vector_blocking:
+  embedding_cache_dir = output_home_directory + 'embeddings/'
+  import os
+  os.makedirs(embedding_cache_dir, exist_ok=True)

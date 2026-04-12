@@ -46,7 +46,7 @@ from common import constants as c
 
 def get_standard_numerical_value(s):
   if type(s) == str:
-    if s is '' or s is None:
+    if s == '' or s is None:
       return None
     if s.isdigit():
       return int(s)
@@ -70,7 +70,7 @@ def get_standard_string(str):
   str = str.lower()
   for punct_char in string.punctuation:
     str = str.replace(punct_char, ' ')
-  str = re.sub('\s+', ' ', str)
+  str = re.sub(r'\s+', ' ', str)
   str = str.strip()
   if str == '' or str == 'anonymous' or str == 'n e':
     return None

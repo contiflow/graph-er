@@ -107,12 +107,12 @@ def enumerate_records(author_file, pubs_file):
         p_id += 1
 
         # Remove unicode bytes starting with & and ending with ;
-        author_fullname = re.sub('\s&.*;\s', '', author_fullname)
+        author_fullname = re.sub(r'\s&.*;\s', '', author_fullname)
 
         # Remove punctuations and digits and split by spaces
         for punct_char in string.punctuation:
           author_fullname = author_fullname.replace(punct_char, ' ')
-        names = re.sub('\s+', ' ', author_fullname).strip().split(' ')
+        names = re.sub(r'\s+', ' ', author_fullname).strip().split(' ')
 
         fname, sname, mname = None, None, None
         if len(names) == 1:

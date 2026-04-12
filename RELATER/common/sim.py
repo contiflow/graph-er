@@ -54,6 +54,9 @@ similarity_dict['JW'] = {}
 
 pair_sim_dict = None
 
+# Embedding cosine similarity dict (populated by vector_blocking)
+embedding_sim_dict = {}
+
 
 def init_pair_sim_dict():
   global pair_sim_dict
@@ -295,3 +298,14 @@ def get_ambiguity(f, N):
   normalized_a = (not_normalized_a * new_range) / old_range
 
   return normalized_a
+
+
+def get_blended_sim(pair, string_function, blend_weight):
+  """Compute blended similarity = (1 - blend_weight) * string_sim + blend_weight * embedding_sim.
+
+  If blend_weight is 0, returns pure string similarity (backward compatible).
+  If blend_weight is 1, returns pure embedding cosine similarity.
+  """
+  str_sim = get_pair_sim_no_cache(pair, string_function)
+  emb_sim = embedding_sim_dict.get(pair, 0.0)
+  return str_sim * (1 - blend_weight) + emb_sim * blend_weight

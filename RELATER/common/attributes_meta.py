@@ -109,7 +109,7 @@ elif c.data_set == 'dblp-scholar1':
   authors_sim_func = {
     c.BB_I_YEAR: 'MAD',
     # c.BB_I_VENUE: 'JW',
-    # c.BB_I_PUBNAME: 'JW',
+    c.BB_I_PUBNAME: 'JW',
     c.BB_I_FNAME: 'JW',
     c.BB_I_SNAME: 'JW'
     # c.BB_I_MNAME: 'JW',

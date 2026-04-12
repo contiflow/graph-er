@@ -11,3 +11,13 @@ merge_t: 0.85
 wa: 0.9
 bridges_n: 10
 scenario_prefix: ""
+
+# Vector retrieval settings (optional, disabled by default)
+# use_vector_blocking: false
+# vector_model: all-MiniLM-L6-v2
+# vector_top_k: 50
+# vector_min_cosine: 0.5
+# vector_sim_blend: 0.3
+# vector_hnsw_m: 32
+# vector_hnsw_ef_construction: 128
+# vector_hnsw_ef_search: 128

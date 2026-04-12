@@ -74,6 +74,60 @@ def generate_atomic_nodes(data_sets, file_name, sim_func_dict):
   record_list_wf1 = pickle.load(open(file_name.format(data_sets[0]), 'rb'))
   record_list_wf2 = pickle.load(open(file_name.format(data_sets[1]), 'rb'))
 
+  # --- Hybrid vector blocking for atomic nodes ---
+  # When vector blocking is enabled, use it for long-text attributes (pubname/
+  # title) where semantic embeddings excel, and brute-force short attributes
+  # (sname, fname, year) where character-level JW works best.
+  if hyperparams.use_vector_blocking:
+    from common import vector_blocking
+    from common import constants as c
+    vector_config = {
+      'model_name': hyperparams.vector_model,
+      'top_k': hyperparams.vector_top_k,
+      'min_cosine': hyperparams.vector_min_cosine,
+      'sim_blend': hyperparams.vector_sim_blend,
+      'hnsw_m': hyperparams.vector_hnsw_m,
+      'hnsw_ef_construction': hyperparams.vector_hnsw_ef_construction,
+      'hnsw_ef_search': hyperparams.vector_hnsw_ef_search,
+      'cache_dir': settings.embedding_cache_dir,
+    }
+    # Attributes to vector-block (long text: pubname/titles)
+    vec_attrs = {c.BB_I_PUBNAME} if hasattr(c, 'BB_I_PUBNAME') else {8}
+    vec_sim_func_dict = {k: v for k, v in sim_func_dict.items() if k in vec_attrs}
+    bf_sim_func_dict = {k: v for k, v in sim_func_dict.items() if k not in vec_attrs}
+
+    # Vector-block long-text attributes
+    if vec_sim_func_dict:
+      logging.info('Vector-blocking atomic attrs: %s', list(vec_sim_func_dict.keys()))
+      vec_dict = vector_blocking.block_atomic_nodes(
+        record_list_wf1, record_list_wf2, vec_sim_func_dict,
+        vector_config, pair_sim)
+      atomic_node_dict.update(vec_dict)
+
+    # Brute-force short attributes (sname, fname, year)
+    if bf_sim_func_dict:
+      logging.info('Brute-forcing atomic attrs: %s', list(bf_sim_func_dict.keys()))
+      bf_dict = _brute_force_atomic_nodes(record_list_wf1, record_list_wf2,
+                                           bf_sim_func_dict, pair_sim)
+      atomic_node_dict.update(bf_dict)
+
+    pickle.dump(atomic_node_dict, open(settings.atomic_node_file, 'wb'))
+    logging.info('Successfully generated atomic nodes (hybrid)')
+    return
+
+  # --- Full brute-force path (when vector blocking is disabled) ---
+  atomic_node_dict.update(
+    _brute_force_atomic_nodes(record_list_wf1, record_list_wf2,
+                               sim_func_dict, pair_sim))
+
+  pickle.dump(atomic_node_dict, open(settings.atomic_node_file, 'wb'))
+  logging.info('Successfully generated atomic nodes')
+
+
+def _brute_force_atomic_nodes(record_list_wf1, record_list_wf2,
+                              sim_func_dict, pair_sim):
+  """Brute-force atomic node generation for a subset of attributes."""
+  atomic_node_dict = {}
   for i_attribute, sim_function in sim_func_dict.items():
     atomic_node_dict[i_attribute] = {}
 
@@ -103,9 +157,7 @@ def generate_atomic_nodes(data_sets, file_name, sim_func_dict):
 
         if sim_val >= 0.8:
           atomic_node_dict[i_attribute][key] = sim_val
-
-  pickle.dump(atomic_node_dict, open(settings.atomic_node_file, 'wb'))
-  logging.info('Successfully generated atomic nodes')
+  return atomic_node_dict
 
 
 def merge_datasets(filename1, dataset1_abbreviation, filename2,
@@ -287,6 +339,7 @@ def link(dataset1_abbreviation, dataset2_abbreviation, atomic_t, merge_t):
   start_time = time.time()
   graph.bootstrap([hyperparams.bootstrap_t])
   t1 = round(time.time() - start_time, 2)
+  stats.bootstrap_time = t1
   logging.info('Bootstrapping time {}'.format(t1))
   # graph.validate_ground_truth('rem-sin-bootstrapped-%s' % hyperparams.scenario,
   #                             t1)
@@ -295,6 +348,7 @@ def link(dataset1_abbreviation, dataset2_abbreviation, atomic_t, merge_t):
   start_time = time.time()
   graph.link(merge_t)
   t2 = round(time.time() - start_time, 2)
+  stats.link_time = t2
   logging.info('Linking time {}'.format(t2))
   # graph.validate_ground_truth('extrapubyear-extraauthoryear-exacty-withsin0.95%s' % hyperparams.scenario, t1 + t2)
   graph.validate_ground_truth('%s' % hyperparams.scenario, t1 + t2)
@@ -322,10 +376,16 @@ if __name__ == '__main__':
   logging.basicConfig(filename=log_file_name, level=logging.INFO, filemode='w')
 
   # PRE-REQUISITES
+  start_time = time.time()
   pre_requisites(data_sets, dataset1_abbreviation, dataset2_abbreviation)
+  stats.prereq_time = round(time.time() - start_time, 2)
+  logging.info('Pre-requisites time {}'.format(stats.prereq_time))
 
   # GENERATE GRAPH
+  start_time = time.time()
   graph = generate_graph(hyperparams.atomic_t)
+  stats.graph_gen_time = round(time.time() - start_time, 2)
+  logging.info('Graph generation time {}'.format(stats.graph_gen_time))
   util.persist_graph_gen_times('def_authors/def_pubs', stats.a_time,
                                stats.r_time)
 
